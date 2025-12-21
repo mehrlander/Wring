@@ -6,7 +6,9 @@ No single adjacent domain provides a complete solution for Wring, but six domain
 
 **Web wrapper induction** (IEPAD) is the most directly analogous pipeline: it uses suffix trees (PAT trees) to find maximal repeats in semi-structured HTML, then applies **center-star multiple sequence alignment** to refine templates by determining literal versus variable positions across occurrences. This maps one-to-one to Wring's Repeat→Stitch approach—the key adaptation is using suffix arrays on tokens instead of HTML tags, and applying alignment to natural text segments rather than DOM records. **Motif discovery** (bioinformatics MEME/Gibbs sampling) addresses approximate matching but suffers from the **large alphabet problem** (50K+ words vs. 4-20 amino acids)—only viable after alphabet reduction via abstract tokenization; provides suffix tree algorithms for finding (ℓ,d)-motifs (patterns with d mismatches) which enable fuzzy template discovery for Type-3 clones. **Diff algorithms** (Myers' algorithm, diff-match-patch) are too slow (O(ND)) for corpus-wide mining but critical for **template refinement** and slot boundary extraction: semantic cleanup heuristics (aligning edits to word boundaries, merging adjacent small diffs) ensure slots don't fragment meaningful units; used in center-star alignment as the pairwise comparison step.
 
-The synthesis yields a **hybrid five-phase architecture**: (1) **Abstraction** via clone detection's parameterized tokenization (reduces alphabet, exposes structure); (2) **Segmentation** via entropy maxima (converts continuous text to discrete records); (3) **Mining** via grammar compression or suffix arrays on abstract stream (finds candidate templates); (4) **Refinement** via center-star alignment with semantic diff (determines literals vs. slots); (5) **Extraction** via Myers' diff on new text (populates slot values). Each phase solves a specific weakness: abstraction handles variability (Type-2), segmentation handles continuous streams, mining provides O(n) scalability, alignment handles noise, diff provides precision. The integration transforms Wring from a novel research problem into an engineering problem solvable with mature cross-disciplinary techniques.
+The synthesis yields a **hybrid six-phase architecture**: (1) **Abstraction** via clone detection's parameterized tokenization (reduces alphabet, exposes structure); (2) **Segmentation** via entropy maxima (converts continuous text to discrete records); (3) **Mining** via grammar compression (primary for hierarchical output) or suffix arrays (for flat output) on abstract stream; (4) **Refinement** via center-star alignment with semantic diff (determines literals vs. slots); (5) **Selection** via grammar MDL pruning with optional flattening; (6) **Extraction** via Myers' diff on new text (populates slot values). Each phase solves a specific weakness: abstraction handles variability (Type-2), segmentation handles continuous streams, mining provides O(n) scalability with natural hierarchy, alignment handles noise, selection enables flat/nested output modes, diff provides precision. The integration transforms Wring from a novel research problem into an engineering problem solvable with mature cross-disciplinary techniques.
+
+**Architecture Decision**: Grammar compression (Sequitur/Re-Pair) is the **primary mining approach** for hierarchical template discovery. Grammar rules directly express nested template relationships through rule references. SA+LCP remains available for candidate seeding or precision-focused flat output. Both paths converge at the refinement phase.
 
 ## Key Insights
 
@@ -34,7 +36,7 @@ The synthesis yields a **hybrid five-phase architecture**: (1) **Abstraction** v
 | **Motif Discovery** | MEME/Gibbs: PWM via EM; Suffix tree "Spelling" for (ℓ,d)-motifs | Fuzzy template discovery (Type-3 clones) | **Alphabet reduction mandatory**: Only apply after Phase 1 abstraction (<100 token classes); use Spelling algorithm on abstract stream to find patterns with mismatches | Phase 3 (Mining - for fuzzy matching) |
 | **Diff Algorithms** | Myers' diff: SES/LCS via O(ND) DP; cleanup heuristics for semantic alignment | Slot boundary extraction + template refinement | Use **only for refinement** (Phase 4) and extraction (Phase 5), not corpus mining; apply cleanup (cleanupSemanticLossless) to align edits to token boundaries | Phase 4 (Refinement) + Phase 5 (Extraction) |
 
-### Integrated Five-Phase Architecture
+### Integrated Six-Phase Architecture
 
 #### **Phase 1: Abstraction (Clone Detection Layer)**
 - **Input**: Raw continuous text
@@ -69,12 +71,22 @@ The synthesis yields a **hybrid five-phase architecture**: (1) **Abstraction** v
 - **Implementation**: JS diff-match-patch for pairwise alignment; column analysis in JS
 - **Purpose**: Distinguishes template constants from slots; handles noise in clusters
 
-#### **Phase 5: Extraction (Diff Layer)**
+#### **Phase 5: Selection (Grammar MDL Layer)**
+- **Input**: Refined grammar rules / candidate templates
+- **Algorithm**:
+  - For grammar path: Apply MDL pruning (keep rules where `rule_cost < inline_cost`); enforce minimum utility
+  - For SA path: Weighted Interval Scheduling for optimal non-overlapping coverage
+  - Optional flattening: Inline rules with single parent; apply WIS for remaining overlaps
+- **Output**: Selected template set (nested DAG or flat list based on output mode)
+- **Implementation**: JS for MDL calculation and DAG traversal; DP for WIS
+- **Purpose**: Chooses between nested and flat output; handles containment decisions
+
+#### **Phase 6: Extraction (Diff Layer)**
 - **Input**: New text + template library
-- **Algorithm**: Match text to template (Drain-style lookup tree); run token-level Myers' diff to extract slot values
-- **Output**: Structured data (template ID + slot value dict)
+- **Algorithm**: Match text to template (Drain-style lookup tree); run token-level Myers' diff to extract slot values; for nested: recursive matching of slot contents
+- **Output**: Structured data (template ID + slot value dict, with optional nesting)
 - **Implementation**: JS diff for small segments; template lookup via hash or parse tree
-- **Purpose**: Operational extraction of structured data from unstructured input
+- **Purpose**: Operational extraction of structured data from unstructured input; supports round-trip reconstruction
 
 ### Domain-Specific Adaptation Matrix
 
