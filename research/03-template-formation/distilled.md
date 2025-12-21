@@ -2,7 +2,13 @@
 
 ## Executive Summary
 
-Converting repeated spans into parameterized templates requires solving the **granularity dilemma**: when should two co-occurring repeated spans merge into one template versus remain separate? This is the analog of `Diff_EditCost`—a tuning parameter that controls whether the system produces many specific templates (fine-grained) or few generic ones (coarse-grained). The optimal answer lies in **MDL (Minimum Description Length)**: merge spans when their union compresses the document better than treating them separately, balancing model complexity (number of templates, slots) against data encoding cost (slot values, residual). Three algorithmic phases enable this: **anchor-sequence search** finds ordered chains of repeated spans (A–gap–B–gap–C) across occurrences; **offset histograms** reveal whether gaps have consistent structure (narrow peak = fixed delimiter, broad distribution = variable slot); **multi-occurrence alignment** determines which positions are constant literals versus variable slots across all instances.
+Converting repeated spans into parameterized templates requires solving the **granularity dilemma**: when should two co-occurring repeated spans merge into one template versus remain separate? This is the analog of `Diff_EditCost`—a tuning parameter that controls whether the system produces many specific templates (fine-grained) or few generic ones (coarse-grained). The optimal answer lies in **MDL (Minimum Description Length)**: merge spans when their union compresses the document better than treating them separately, balancing model complexity (number of templates, slots) against data encoding cost (slot values, residual).
+
+Two primary approaches exist for template formation:
+
+**Approach A: Anchor-Sequence Search** (bottom-up, explicit): Three algorithmic phases—**anchor-sequence search** finds ordered chains of repeated spans (A–gap–B–gap–C) across occurrences; **offset histograms** reveal whether gaps have consistent structure (narrow peak = fixed delimiter, broad distribution = variable slot); **multi-occurrence alignment** determines which positions are constant literals versus variable slots.
+
+**Approach B: Grammar-Based Formation** (top-down, implicit): Grammar induction algorithms (Sequitur, Re-Pair) directly produce template structure as grammar rules. Each rule body is a template; rule references create **nested template relationships** automatically. A rule like `R1 → "User" R2 "logged in"` where `R2 → <SLOT>` naturally expresses a template with a sub-template reference. This approach sidesteps explicit anchor search—the digram/pair replacement heuristics implicitly discover which spans should merge and which should nest.
 
 **Anchor-sequence search** must avoid O(n²) candidate enumeration. Efficient approaches include emitting an event stream of (position, anchorID) tuples and using **sliding window joins** to find frequent pairs in O(n·W) time where W is a small window size. This builds a DAG where nodes are anchors and edges represent frequent co-occurrence—paths through this graph are candidate templates. Suffix-based positional indexes enable linear-time intersection of occurrence lists. **Offset histogram analysis** computes the distribution of distances `pos(B) - pos(A)` for each anchor pair: a Dirac delta (single peak) indicates rigid coupling suggesting merge; multimodal peaks suggest discrete variation (enum slots); Gaussian spread indicates elastic variable-length fields; uniform distribution means no structural relationship. This spatial analysis distinguishes structure from coincidence.
 
@@ -10,18 +16,40 @@ Converting repeated spans into parameterized templates requires solving the **gr
 
 ## Key Insights
 
+- **Grammar rules ARE templates**: In grammar-based formation, each rule body directly represents a template; rule references (`R1 → "prefix" R2 "suffix"`) express nested template relationships; no separate "stitch anchors into template" phase needed
+- **Nesting emerges from reuse**: When a pattern appears both standalone AND as part of a larger pattern, grammar induction creates a rule for the sub-pattern and references it—this is exactly the hierarchical template relationship, discovered automatically
+- **Rule utility decides containment**: Sequitur's digram uniqueness constraint and rule utility tracking (usage count ≥2) implicitly solve the "should this be a sub-template" question; Re-Pair's frequency-based pair selection does the same globally
 - **Granularity knob = merge cost function**: Optimal merging isn't a static threshold but a composite function of offset variance (spatial consistency), gap entropy (informational diversity), and co-occurrence frequency (structural coupling)—tuning these weights controls fine vs. coarse templates
 - **Offset histogram topology is diagnostic**: Shape encodes gap semantics—Dirac delta (merge, it's a delimiter), discrete modes (enum slot), Gaussian (string slot), uniform (unrelated); this spatial analysis complements content-based entropy measures
-- **O(n) anchor-sequence search is mandatory**: Naive pairwise checking is O(n²); sliding window joins over anchor event streams achieve O(n·W) by only examining local neighborhoods; frequent itemset mining with position lists scales via vertical intersection
+- **O(n) anchor-sequence search is mandatory**: For explicit approach, naive pairwise checking is O(n²); sliding window joins over anchor event streams achieve O(n·W) by only examining local neighborhoods
 - **Center-star beats full MSA**: Multi-sequence alignment is NP-hard; center-star (pick median, align all to it) runs in O(k·L²) for k occurrences of length L and guarantees 2-approximation—sufficient for logs where a clear prototype exists
 - **Gap entropy determines merge**: High H(gap) = many distinct values → parameter slot (e.g., usernames); low H(gap) = few/single value → missed literal, merge anchors (e.g., always "successfully" between "User" and "logged")
 - **Token splitting via MDL**: Treating `key=value` as one token wastes encoding; splitting to `key=` (literal) + `value` (slot) reduces model cost when the prefix repeats—calculate Δ MDL to decide when boundaries should refine
 - **Template merge heuristics form cascade**: Apply sequentially—(1) min literal length ≥3 tokens blocks noise, (2) max slots ≤4 prevents unreadable wildcards, (3) compression gain threshold ensures benefit exceeds overhead, (4) gap entropy confirms semantic coherence
 - **Progressive alignment trades accuracy for speed**: Spell/RoadRunner align iteratively (seed template + new instance → generalized template); faster than center-star but risks "once a gap, always a gap" errors from early decisions; suitable for streaming but revisable center-star better for batch
-- **Event stream abstraction reduces dimensionality**: Transforming raw text to (pos, anchorID) events converts high-dimensional string problem to discrete sequential pattern mining—enables graph-based skeleton assembly and histogram analysis
-- **Slot boundary alignment with token edges**: Slots should span whole tokens (or known field delimiters) not fragment words mid-stream; exceptions allowed when common prefix/suffix extraction (like ERR in ERR42) improves MDL—but requires character-level secondary alignment
+- **Two paths to same goal**: Anchor-sequence search + alignment produces flat templates explicitly; grammar induction produces hierarchical templates implicitly—both can be refined with center-star alignment for slot boundary precision
 
 ## Recommendations
+
+### Path Selection
+
+| Scenario | Recommended Approach | Rationale |
+|----------|---------------------|-----------|
+| Hierarchical output needed | Grammar-based (Sequitur/Re-Pair) | Produces nested templates naturally; rule references = sub-template relationships |
+| Flat output, maximum control | Anchor-sequence + alignment | Explicit merge decisions; fine-grained tuning possible |
+| Streaming/real-time | Grammar-based (Sequitur) | Online O(n); incremental updates |
+| Batch + precision | Anchor-sequence or Re-Pair | Full corpus optimization |
+
+### Grammar-Based Formation (Recommended for Hierarchy)
+
+| Phase | Technique | Algorithm/Heuristic | Rationale |
+|-------|-----------|---------------------|-----------|
+| **1. Grammar induction** | Sequitur or Re-Pair | Run on abstract token stream | Rules = templates; references = nesting; O(n) online or batch |
+| **2. Rule → Template mapping** | Extract rule bodies | Literals + rule refs + terminal slots | Each rule body becomes template structure |
+| **3. Slot identification** | Abstract token analysis | Tokens typed in Phase 1 (Q1) become slots | `<NUM>`, `<DATE>`, `<IP>` → slot positions |
+| **4. Refinement (optional)** | Center-star on rule instances | Align instances to refine slot boundaries | Handles cases where typing was too coarse |
+
+### Anchor-Sequence Formation (Alternative for Flat)
 
 | Phase | Technique | Algorithm/Heuristic | Rationale |
 |-------|-----------|---------------------|-----------|
