@@ -33,17 +33,15 @@ But there's a shared sequence, and an interloper.  Without the color, it would b
 
 The shared strings can be seen as two pairs of commmon bookends, with different middles.  Call the middle a variable, or a slot.  Then call the shared strings literals, and designate the whole structure as a template.
 
-Skeleton + residual = template + slot values.
-
 ---
 
 ## First Questions
 
 How do we find these templates?  We may want to allow for multiple slots.  And we may have a certain tolerance for how long the slot can be, or an expectation of how much should be shared compared to how much should be different.  
 
-But repeat strings of a length to be interesting may also be rare enough that any "real" template will jump out from a simple tally of shared sequences with weights.  
+Repeat strings of a length to be interesting may also be rare enough that any "real" template will jump out from a simple tally of shared sequences with weights.  
 
-We could imagine each shared string where it occurs as a representative symbol and cull the rest, so our document is reduced to a string of these symbols. What "words" emerge from that string? 
+We could imagine each shared string where it occurs as a representative symbol and cull the rest, so our document is reduced to a string of these symbols. What "words" emerge from that string?
 
 
 ## Diagram
