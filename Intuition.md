@@ -1,4 +1,3 @@
-Here is the complete, consolidated document in Markdown.
 Template Discovery
 The Problem
 Text often contains internally repeated structures (e.g., log entries, data lists, code blocks). We want to programmatically identify these implicit templates.
