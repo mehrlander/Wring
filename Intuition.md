@@ -2,19 +2,17 @@
 
 ## The Beginning
 
-You have text. It has patterns. You want to find those patterns.
+Text often has structures that repeat with variant and invariant parts.  
 
-You want to discover what the things are so you can see them as things and then see their moving parts.
+We’d like to find the template that was used, or could be used, to reproduce a given text. 
 
 ---
 
-## What Repeats
+## Length and Count
 
-A recurrence is juicy if it's long and shows up a lot. We could distill it, we could wring it out.
+Repeated structures must have repeated strings. We can tally substrings.
 
-So: repetition, weighted by length.
-
-We know how to count strings that repeat.
+A recurrence is "juicy" if it's long and shows up a lot.  We could distill it, or wring it out.
 
 ---
 
