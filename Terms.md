@@ -8,7 +8,7 @@ We are focused on identifying template patterns in text—or, by one way of thin
 
 At the same time, we’re not looking for latent structure hidden beneath the surface. This isn’t topic modeling or dimensionality reduction. The patterns we seek are *right there*—repeated literals, visible variation. The challenge is terminology, not detection.
 
-Clear terms matter because a template is an abstraction. It doesn’t occur the way a word does. A word is in the text. A template is something we recognize *across* instances—the prototype that instances exemplify. When you abstract, you get a type and its tokens, a universal and its particulars, a form and its manifestations. Russell, Wittgenstein, Plato if you like. The template is the form; instances are where it shows up.
+A template is an abstraction. It is something we recognize *across* instances—the prototype that instances exemplify. When you abstract, you get a type and its tokens, a universal and its particulars, a form and its manifestations. Russell, Wittgenstein, Plato if you like. The template is the form; instances are where it shows up.
 
 So the verbs split naturally:
 
@@ -33,7 +33,7 @@ This document brainstorms vocabulary toward those ends—language that respects 
 
 **The shape sorter**: The pattern is the hole. Text is the block. The hole has contour (literals) and open space (slots). Various blocks fit, as long as they have the right profile.
 
-**The magic carpet**: The pattern floats over the document, translucent. Opaque regions (literals) and transparent regions (slots). When the opaque parts align with text below, it locks in, lights up. Then lifts off and keeps scanning.
+**The overlay**: The pattern floats over the document. Opaque regions (literals) and transparent regions (slots). When the opaque parts align with text below, it locks in, lights up. Then lifts off and keeps scanning.
 
 **The machined part**: Two surfaces mate. Tolerance determines how much deviation is allowed. Seating surfaces make contact. Clearance accommodates variation.
 
@@ -129,78 +129,14 @@ recognize, discern, perceive, apprehend, identify, make out, pick out, distingui
 
 -----
 
-## Part 3: Entity Terminology
+## Part 3: Entities and Verbs
 
-*What we call the pieces.*
-
-|Entity                    |Role                                  |Notes                                                |
-|--------------------------|--------------------------------------|-----------------------------------------------------|
-|**Template** / **Pattern**|The abstract structure                |“Template” may imply generation; “pattern” is neutral|
-|**Instance**              |A concrete occurrence in text         |Appears, is locatable                                |
-|**Anchor**                |A literal that recurs across instances|The skeleton, the seating surface, the binding site  |
-|**Slot**                  |A variable position                   |Accepts variation, has tolerance                     |
-|**Literal**               |Exact text within a template          |Must match character-for-character                   |
-|**Seat** / **Site**       |A location where a template matches   |The place in the text                                |
-
------
-
-## Verb Grammar
-
-|Entity  |Matching verb                      |Emergence verb                            |
-|--------|-----------------------------------|------------------------------------------|
-|Literal |occurs                             |—                                         |
-|Instance|appears                            |—                                         |
-|Template|matches, seats, binds, registers   |emerges, derives, crystallizes, is induced|
-|Anchor  |aligns, grips, holds               |is identified, is extracted               |
-|Slot    |accepts, admits, binds to (a value)|is inferred, resolves                     |
-
------
-
-## Leading Candidates
-
-### For matching:
-
-|Term        |Strengths                                                                            |
-|------------|-------------------------------------------------------------------------------------|
-|**seat**    |Physical, non-generative, implies prepared location. “The pattern seats three times.”|
-|**bind**    |Mutual grip, chemistry resonance. Slots “bind to” values.                            |
-|**agree**   |Mutual, symmetric. Pattern and text simply agree or don’t.                           |
-|**register**|Alignment clicking into place. Things lining up.                                     |
-
-### For emergence:
-
-|Term           |Strengths                                                  |
-|---------------|-----------------------------------------------------------|
-|**emerge**     |Clean, implies no forcing agent.                           |
-|**derive**     |Follows necessarily from instances.                        |
-|**crystallize**|Chaos resolving into structure. Visual.                    |
-|**induce**     |Logic term—particular to general. Explicit about inference.|
-|**distill**    |Essence extracted, impurities removed.                     |
-
------
-
-## Agency Gradient
-
-Emergence terms vary in how much they imply an agent:
-
-|Low agency (it just happens)                         |High agency (we do it)                              |
-|-----------------------------------------------------|----------------------------------------------------|
-|emerges, arises, crystallizes, precipitates, resolves|extract, distill, induce, reverse-engineer, abstract|
-
-Both may be true at different moments:
-
-- The template **emerges** (we notice the pattern)
-- We **induce** its structure (we formalize what we noticed)
-- The template **derives** (it follows necessarily from the instances)
-
------
-
-## Open Questions
-
-- Do we settle on one primary verb per category, or a small family?
-- Is “template” the right noun, given its generative connotations? Alternatives: pattern, schema, form, frame, structure.
-- What’s the opposite of a seat? A miss? A gap? A void?
-- Should “anchor” also work as a verb? (“The literal anchors the pattern to the text”)
+|Entity      |Role                                  |Matching                 |Emergence                        |
+|------------|--------------------------------------|-------------------------|---------------------------------|
+|**Template**|The abstract structure                |seats, binds, registers  |emerges, crystallizes, is induced|
+|**Instance**|A concrete occurrence in text         |appears                  |—                                |
+|**Anchor**  |A literal that recurs across instances|aligns, grips, holds     |is identified, is extracted      |
+|**Slot**    |A variable position                   |accepts, admits, binds to|is inferred, resolves            |
 
 -----
 
