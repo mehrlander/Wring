@@ -23,10 +23,6 @@ This opens two distinct vocabulary needs:
 1. **Matching**: How a template relates to text once it exists. Fitting, aligning, seating, binding.
 1. **Emerging**: How a template comes into being. Deriving, crystallizing, inducing, distilling.
 
-Different moments, different verbs.
-
-This document brainstorms vocabulary toward those ends—language that respects the abstraction, distinguishes type from token, and honors discovery over generation.
-
 -----
 
 ## Guiding Images
