@@ -37,7 +37,7 @@ Prioritize interpretability over maximal compression:
 ## Key Assumptions (Open)
 
 * **Templates are Grounded in Repeats**: Templates link repeated substrings. We can start from repeated substrings and get to any template. 
-* **The "DRY" Objective**: The goal is to "dry up" a document, and make the underlying data more intelligible by removing the clutter of redundant text.
+* **The "DRY" Objective**: The goal is to "dry up" a document to make the underlying data more intelligible by removing the clutter of redundant text.
 * **Repetition vs. Structure**: A template emerges from repeated text, and any recurring pattern may reflect a structure at some level. However, a pattern is not structural in every context that contains it. Some repeats are "floating" or transversal, while others are "foundational" and tied to the document's architecture. What constitutes structure must be assessed from a perspective.
 * **Idealized Forms**: A template should bind to a meaningful structure. This may involve a process to gravitate toward instances that support a coherent structural model, and away from instances that pollute the model, as the model is derived.
 * **Navigable Discovery**: Discovery may benefit from a human-in-the-loop "choose your own adventure" process. The algorithm collates and proposes potential structures, providing the levers for a user to navigate, interact with, and ultimately select the abstractions that are most meaningful.
