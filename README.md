@@ -23,207 +23,102 @@ flowchart TD
 ```
 
 ## Use Cases
+
 Prioritize interpretability over maximal compression:
  * Structured documents (budget bills, legislation): infer markup structure for annotation or XML conversion
  * Web development: convert repetitive HTML into data-driven JS generation
  * Logs: separate boilerplate from variable content to surface the actual information
 
 ## Core Objectives
- * Character Allocation: In principle, every character in a document—including whitespace—is respected and allocated to one of three Primitive Types: Literals, Slots, or Whitespace. Any un-patterned text is designated as Residual.
- * Reconstruction Fidelity: The default model aims for exact reproduction. However, by treating Whitespace as a distinct primitive, the system can provide mechanisms to expunge "formatting noise" from the output for better readability, acknowledging the trade-off in reproducibility.
- * Structural Separation: The system decomposes the document into recurring structural patterns (templates) and their specific occurrences (instances), allowing for a clean division between boilerplate and variable content.
- * Browser-First Performance: Discovery and indexing logic is optimized for the memory and execution limits of the browser environment (~100KB–10MB range), utilizing WASM for high-density indexing where necessary.
 
-## Key Assumptions (Open)
+ * **Character Allocation**: Every character—including whitespace—is allocated to one of three primitive types: Literals, Slots, or Whitespace. Un-patterned text is designated as Residual.
+ * **Reconstruction Fidelity**: The default model aims for exact reproduction. By treating Whitespace as a distinct primitive, the system can optionally expunge "formatting noise" for readability, acknowledging the trade-off.
+ * **Structural Separation**: The system decomposes the document into recurring structural patterns (templates) and their specific occurrences (instances), separating boilerplate from variable content.
+ * **Browser-First Performance**: Discovery and indexing logic is optimized for browser memory and execution limits (~100KB–10MB range), utilizing WASM for high-density indexing where necessary.
+
+## Key Assumptions
 
 * **Templates are Grounded in Repeats**: Templates link repeated substrings. We can start from repeated substrings and get to any template. 
-* **The "DRY" Objective**: The goal is to "dry up" a document to make the underlying data more intelligible by removing the clutter of redundant text.
-* **Repetition vs. Structure**: A template emerges from repeated text, and any recurring pattern may reflect a structure at some level. However, a pattern is not structural in every context that contains it. Some repeats are "floating" or transversal, while others are "foundational" and tied to the document's architecture. What constitutes structure must be assessed from a perspective.
-* **Idealized Forms**: A template should bind to a meaningful structure. This may involve a process to gravitate toward instances that support a coherent structural model, and away from instances that pollute the model, as the model is derived.
-* **Navigable Discovery**: Discovery may benefit from a human-in-the-loop "choose your own adventure" process. The algorithm collates and proposes potential structures, providing the levers for a user to navigate, interact with, and ultimately select the abstractions that are most meaningful.
-
-## Architectural Forks
-
-Two major design decisions shape the entire approach. These remain open:
-
-### Pipeline Architecture
-
-| Path | Description | Trade-offs |
-|------|-------------|------------|
-| **Repeat→Stitch** | Mine repeated spans, then stitch co-occurring anchors into templates | Interpretable intermediate steps; may miss hierarchical structure |
-| **Grammar-First** | Use grammar compression (Sequitur/Re-Pair) with constrained rule formation; rules may directly correspond to templates | Captures hierarchy naturally; rules may not align with human-interpretable units |
-
-### Coverage Model
-
-| Model | Description | Trade-offs |
-|-------|-------------|------------|
-| **Flat** | Instances cover disjoint regions; residual fills gaps; reconstruction is concatenation in offset order | Simple selection (weighted interval scheduling); no compositionality |
-| **Hierarchical** | Instances form a parse DAG; templates can contain other templates | Captures nested structure; requires defined decoding order; more complex selection |
+* **The "DRY" Objective**: The goal is to "dry up" a document to make the underlying data more intelligible by removing redundant text.
+* **Structural vs. Floating Repeats**: Some repeats are "foundational" and tied to document architecture; others are "floating" or transversal. What constitutes structure must be assessed from a perspective. Low variance in relative distance suggests structural; high variance suggests incidental.
+* **Idealized Forms**: A template should bind to a meaningful structure. This may involve gravitating toward instances that support a coherent model, and away from instances that pollute it.
+* **Flat or Hierarchical**: Instances may cover disjoint regions (flat model, simple interval scheduling) or form a parse DAG where templates contain other templates (hierarchical model, captures nesting but requires defined decoding order). Either may be of interest depending on the document.
+* **Navigable Discovery**: Discovery may benefit from a human-in-the-loop process. The algorithm proposes potential structures; the user navigates and selects the abstractions that are most meaningful.
 
 ---
 
-## Research Questions
+## Pipeline
 
-### 1. Tokenization
+Four phases, each with associated optimization problems. Any phase may terminate early when diminishing returns or residual entropy indicate satiety.
 
-*What representation best supports template discovery?*
+### 1. Substring Discovery
 
-**Token granularity**
-- Character-level vs token stream (word/punct/whitespace)
-- Trade-offs: pattern frequency vs structural fidelity
-- Open question: should token boundaries be *discovered* from repeated structure rather than imposed? Character-level mining may reveal patterns that pre-tokenization would miss.
+Enumerate repeated substrings; rank by structural signal.
 
-**Implications**
-- Mining on "skeleton tokens" (literals) vs "value tokens" (variable content) is resolved by the strict fidelity constraint: we mine literals, everything else is a slot.
+| Problem | Input | Objective | Constraint |
+|---|---|---|---|
+| Repeat Enumeration | Document, min length, min frequency | All maximal repeated substrings | O(n) space; efficient LCP-interval traversal |
+| Anchor Ranking | Repeated substrings | Score by structural signal vs. incidental repetition | Length × frequency baseline; topological neighborhood weight |
 
-### 2. Repeat Primitives + Candidate Control
+**Algorithms**: Suffix array + LCP interval traversal; suffix tree internal nodes; suffix automaton. Winnowing/fingerprinting for coarse seeding on large documents.
 
-*Which primitives yield high-signal candidates while avoiding pattern explosion?*
+**Failure modes**:
+- *Token Splitting*: Pattern boundaries landing inside semantic atoms (words, numbers)
 
-**Terminology**
-- *Occurrence list*: sorted positions of a candidate anchor in the document
-- *Interval*: SA-range (pair of suffix array indices) representing those positions
+### 2. Topology
 
-**Enumeration approaches**
-- SA+LCP interval traversal: scan LCP array with stack of open intervals; each close emits (pattern, length, frequency, occurrence list)
-- Suffix tree internal node traversal
-- Suffix automaton
-- Winnowing/fingerprinting as coarse seeding for large documents
+Reduce document to symbol stream; score pairwise consistency; mine anchor chains.
 
-**Repeat types**
-- Maximal repeats: can't extend without losing occurrences
-- Supermaximal repeats: maximal and not contained in any longer repeat with same frequency
-- Closed repeats: no strict superpattern with the same occurrence set
+| Problem | Input | Objective | Constraint |
+|---|---|---|---|
+| Pairwise Consistency | Symbol stream, symbol pair (A, B) | Measure variance of gap distances across all co-occurrences | Low variance → structural; high variance → floating |
+| Distance Matrix | Symbol stream, all symbol pairs | Pairwise consistency scores as adjacency weights | Sparse: only pairs within max gap window |
+| Sequence Mining | Distance matrix, max gap | Ordered anchor chains (paths) with consistent spacing | Chains must appear ≥ k times |
 
-Open question: which repeat type produces cleaner literal skeletons across different document types (logs vs legal text vs source code)?
+**Algorithms**: Sequential pattern mining (PrefixSpan, GSP) with max-gap constraints. Distance decay scoring. Cross-correlation for lag detection.
 
-**Candidate control**
-- Frequency and length thresholds
-- Dominance/containment pruning: when does a longer pattern subsume a shorter?
-- Output-sensitive complexity depends on document structure
+**Failure modes**:
+- *Conflation*: Distinct structures collapsing into a single generic template via shared syntax
+- *Scale Bias*: Capturing the broad container while missing discrete items within (or vice versa)
 
-### 3. Template Formation
+### 3. Refinement
 
-*How to convert repeated spans into parameterized templates?*
+Gravitate templates toward idealized forms; adjust slot boundaries; infer slot types.
 
-**Core question**: When should two co-occurring repeated spans become one template vs remain separate? This is analogous to `Diff_EditCost`—a granularity knob.
+| Problem | Input | Objective | Constraint |
+|---|---|---|---|
+| Idealized Refinement | Candidate template, bound instances | Gravitate toward instances with coherent slot signatures | Reject/expunge instances that pollute the structural model |
+| Template Merge/Split | Similar or high-variance templates | Unify or partition templates toward idealized form | Merge/split based on dictionary cost vs. slot entropy |
+| Slot Boundary Refinement | Template skeleton, instance alignments | Minimize slot entropy while preserving token integrity | Boundaries align with token edges or stable whitespace boundaries |
+| Slot Typing | Slot values across instances | Infer regex, character class, or grammar for content | Aids interpretability and validation |
 
-**Anchor-sequence search**
-- Given repeated spans, find ordered chains (A – gap – B – gap – C) that recur across occurrences
-- Technique: emit event stream of (pos, anchorID), then sliding-window join or segment-bucketed joins
-- Directly yields template skeletons with gaps as candidate slots
-- Require at least one O(#candidates) alignment strategy, not O(#candidates²)
+**Algorithms**: Center-star alignment for multi-instance comparison. Gap entropy as stitching heuristic. Edit distance for near-miss detection.
 
-**Offset histograms**
-- For candidate pairs (A, B), compute distribution of `pos(B) − pos(A)` across occurrences
-- Peaks indicate consistent relative positioning
-- Gate by frequency/length to avoid quadratic blowup
+**Failure modes**:
+- *Shattering*: Cohesive logical units fracturing into disconnected micro-templates
+- *Cost Modeling*: Miscalculating the utility of merging variants versus keeping them distinct
 
-**Multi-occurrence alignment**
-- Align all instances of a candidate template region to infer literal vs slot positions
-- Baseline: center-star (pick highest-scoring instance as center, align all others pairwise, merge)
+### 4. Selection
 
-**Gap analysis**
-- Gap entropy as stitching heuristic: high-entropy gaps become slots; low-entropy gaps suggest merging adjacent literals
-- Minimum literal length, maximum slot count, compression gain threshold
+Resolve overlaps; infer nesting; select final template set.
 
-**Slot boundaries**
-- Primary mode: align with token boundaries
-- Optional refinement: split tokens when it materially improves MDL without harming interpretability
+| Problem | Input | Objective | Constraint |
+|---|---|---|---|
+| Overlap Resolution | Conflicting candidate instances | Select non-overlapping subset maximizing total gain | Weighted interval scheduling (flat) or DAG (hierarchical) |
+| Hierarchical Nesting | Selected templates/instances | Infer nesting; build structural parse tree | Parent must fully enclose child instances |
+| Template Selection | Global template pool | Maximize total DRY gain and intelligibility | Balance model complexity vs. document coverage |
+| Residual Diagnosis | Unmatched spans | Distinguish noise from near-misses; assess entropy | High entropy → satiety; low entropy → latent structure |
 
-### 4. Objective + Selection
+**Algorithms**: Weighted interval scheduling (flat model). DAG selection for hierarchical. Krimp-style greedy (accept if total code length decreases). MDL-style objective with explicit costs to prevent degenerates.
 
-*What scoring and selection regime works in practice?*
-
-**MDL-style objective**
-Open question: optimal template selection relates to smallest grammar (NP-hard). What approximation strategies from grammar compression literature apply?
-
-**Cost modeling**
-- Explicit costs prevent degenerates: mostly-slot templates, tiny frequent literals, single-use templates
-- Slot encoding cost depends on content: pure whitespace < bounded integer < unconstrained string
-
-**Calibration** (not static weights)
-- How should costs adjust based on document size, average token length, observed entropy?
-- Proxy scores: `coverage × literal_length − slot_entropy_penalty` as cheaper approximation
-
-**Selection algorithms**
-- Weighted interval scheduling: candidate instances as intervals with weight = gain; classic DP for flat model
-- Krimp-style greedy: order by length × frequency, accept if total code length decreases
-
-**Termination criteria**
-- Coverage threshold
-- Diminishing returns
-- Template count limit
-
-**Partial matches**
-- Policy needed when most but not all instances fit a pattern
-- Options: exclude outliers to residual, create variant templates
-- **Constraint**: No fuzzy matching. Exact matches only.
-
-**Residual classification**
-- Residual regions may be noise (truly random) or outliers (near-matches that failed threshold)
-- Outlier promotion policy: if a residual is 90% similar to existing template, force-fit as dirty instance (recording all diffs as slots) or keep separate?
-
-### 5. Adjacent Domains
-
-*Which existing solutions apply?*
-
-| Domain | Relevance | Adaptation needed |
-|--------|-----------|-------------------|
-| **Log parsing** (Drain, Spell, LogMine) | Clustering + consensus | Assumes pre-segmented lines; continuous text? |
-| **Clone detection** | Abstract tokenization | Pre-typing (removed per strict fidelity) |
-| **Grammar compression** (Sequitur, Re-Pair) | Hierarchical structure discovery | May be the right primitive, not just related work |
-| **Web wrapper induction** (IEPAD) | Repeat detection + alignment for records | Directly analogous pipeline |
-| **Diff algorithms** | Cleanup heuristics for small differences | Analogous to slot boundary decisions |
-
-### 6. Implementation
-
-*JS/WASM architecture for practical use*
-
-**JS landscape gaps** (verify current state)
-- `mnemonist`: GeneralizedSuffixArray, no repeat enumeration
-- `@jayrbolton/suffix-tree`: Ukkonen's, no frequency-filtered enumeration
-- `string-algorithms`: SA+LCP construction, no repeat API
-- No library provides `getRepeats(minLen, minFreq)` → implement LCP-interval stack traversal
-
-**Architecture questions**
-- WASM candidates: SA+LCP construction, suffix automaton, grammar compression
-- JS layer: tokenization, candidate filtering, scoring, selection, output
-- Memory strategy: TypedArrays, zero-copy views, chunking
-
-**WASM↔JS boundary**
-- Memory layout strategy needed: how do SA/LCP integers in WASM memory map to JS `templates[]` without expensive copying?
-- Serialization of tree structures is the friction point
-
-**Data structures**
-- Interval lists for occurrences
-- Cover bitmaps for overlap detection
-- Template DAG if hierarchical model chosen
+**Failure modes**:
+- *Cost Modeling*: Slot encoding costs that don't reflect actual complexity (whitespace < bounded integer < unconstrained string)
 
 ---
 
-## Candidate Pipeline
+## Supporting Documents
 
-One possible architecture (to be validated against grammar-first alternative):
-
-1. (optional) segment on structural markers (blank lines, headers)
-1. tokenize → token IDs + positions
-1. build index (SA+LCP or grammar)
-1. extract repeated structure → candidates + occurrence lists
-1. form templates:
-   - anchor-sequence search
-   - align occurrences
-   - apply gap-entropy heuristic
-1. score with MDL-like objective
-1. select under overlap policy
-1. emit templates[] + instances[] + residual
-
----
-
-## Failure Modes
-
-- **Token Splitting**: Pattern boundaries landing inside semantic atoms (words, numbers).
-- **Shattering**: Cohesive logical units fracturing into disconnected micro-templates.
-- **Conflation**: Distinct structures collapsing into a single generic template via shared syntax.
-- **Scale Bias**: Capturing the broad container while missing the discrete items within (or vice versa).
-- **Cost Modeling**: Miscalculating the utility of merging variants versus keeping them distinct.
+- **Intuition.md**: First-principles observations about template structure
+- **Terms.md**: Vocabulary for matching (seat, bind, register) and emergence (crystallize, induce, distill)
+- **Order.md**: Quantifying ordered relationships; distinguishing structural anchors from variable decoys
+- **Discovery.md**: The symbol-reduction framing of template inference
