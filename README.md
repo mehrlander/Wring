@@ -15,6 +15,9 @@ graph TD
     Instances --> Literals["Literals (Invariant Structure)"]
     Instances --> Slots["Slots (Variable Content)"]
 
+    style Document fill:#f9f,stroke:#333,stroke-width:2px
+    style Instances fill:#bbf,stroke:#333,stroke-width:2px
+    style Residual fill:#eee,stroke:#333,stroke-dasharray: 5 5
 
 ## Use Cases
 
