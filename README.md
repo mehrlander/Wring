@@ -6,18 +6,15 @@ Single-document template induction from internal repetition.
 
 ## Problem
 
-Given one document, infer a compact set of parameterized templates (literals + slots) and an instance map (offsets + slot fills). Optimize for compression (MDL-ish) while preserving interpretability. Templates + instances must reconstruct the original exactly (round-trip correctness).
+Given one document, infer a compact set of parameterized templates (literals + slots) and an instance map (offsets + slot fills). Optimize for compression (MDL-ish) while preserving interpretability. Templates + instances must reconstruct the original exactly.
 
+```mermaid
 graph TD
     Document --> Instances
     Document --> Residual["Residual (Unstructured)"]
 
     Instances --> Literals["Literals (Invariant Structure)"]
     Instances --> Slots["Slots (Variable Content)"]
-
-    style Document fill:#f9f,stroke:#333,stroke-width:2px
-    style Instances fill:#bbf,stroke:#333,stroke-width:2px
-    style Residual fill:#eee,stroke:#333,stroke-dasharray: 5 5
 
 ## Use Cases
 
