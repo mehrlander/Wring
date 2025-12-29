@@ -6,7 +6,9 @@ Single-document template induction from internal repetition.
 
 ## Problem
 
-Given one document, infer a compact set of recurring patterns (templates) and an instance map of their occurrences. The goal is to optimize for a balance of compression and human interpretability, ensuring that the decomposed structure can reconstruct the original document exactly.
+Given one document, infer a compact set of recurring patterns (templates) and an instance map of their occurrences. 
+
+The goal is to optimize for a balance of compression and human interpretability.
 
 ```mermaid
 flowchart TD
