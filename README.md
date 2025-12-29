@@ -8,6 +8,14 @@ Single-document template induction from internal repetition.
 
 Given one document, infer a compact set of parameterized templates (literals + slots) and an instance map (offsets + slot fills). Optimize for compression (MDL-ish) while preserving interpretability. Templates + instances must reconstruct the original exactly (round-trip correctness).
 
+graph TD
+    Document --> Instances
+    Document --> Residual["Residual (Unstructured)"]
+
+    Instances --> Literals["Literals (Invariant Structure)"]
+    Instances --> Slots["Slots (Variable Content)"]
+
+
 ## Use Cases
 
 Prioritize interpretability over maximal compression:
