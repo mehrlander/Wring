@@ -15,6 +15,7 @@ graph TD
 
     Instances --> Literals["Literals (Invariant Structure)"]
     Instances --> Slots["Slots (Variable Content)"]
+```
 
 ## Use Cases
 
