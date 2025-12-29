@@ -33,7 +33,7 @@ Determine the probability of flow between symbols.
 
 Extract definitive template chains from the topology graph.
 
-* **Action**: Trace the strongest paths (e.g., $A \to $B \to $C) through the weighted graph.
+* **Action**: Trace the strongest paths (e.g., $A => $B => $C) through the weighted graph.
 * **Refinement**: Prune weak branches and low-confidence links.
 * **Definition**: A "locked-in" path becomes a Template. The symbols on the path become Literals. The residue trapped between them becomes Slot Data.
 
