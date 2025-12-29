@@ -18,9 +18,10 @@ Prioritize interpretability over maximal compression:
 
 ## Constraints
 
-- Input: one string (~100KB–10MB)
-- Output: `templates[]`, `instances[]`, `residual`
-- Target: browser JS; WASM allowed for core indexing/mining
+- **Input**: one string (~100KB–10MB)
+- **Output**: `templates[]`, `instances[]`, `residual`
+- **Target**: browser JS; WASM allowed for core indexing/mining
+- **Strict Fidelity**: All variation between instances is treated as slot content. We do not normalize, trim, or "clean" the input. `Template + Instances` must yield a byte-perfect reconstruction of the original input.
 
 ## Key Assumptions (Open)
 
@@ -28,7 +29,7 @@ These are working assumptions to be validated or revised:
 
 - Sufficient internal redundancy exists (no external corpus needed)
 - Exact structure mining has mature primitives (SA+LCP, suffix tree/automaton, grammar compression); practical risks are output sensitivity (pattern explosion) and JS memory/perf limits
-- Template induction is design-dependent: token model, typing, slot boundary inference, overlap policy, and objective function materially affect results
+- Template induction is design-dependent: token granularity, slot boundary inference, overlap policy, and objective function materially affect results.
 
 ## Architectural Forks
 
@@ -52,24 +53,17 @@ Two major design decisions shape the entire approach. These remain open:
 
 ## Research Questions
 
-### 1. Tokenization + Typing
+### 1. Tokenization
 
 *What representation best supports template discovery?*
 
 **Token granularity**
 - Character-level vs token stream (word/punct/whitespace)
 - Trade-offs: pattern frequency vs structural fidelity
-- Open question: should token boundaries be *discovered* from repeated structure rather than imposed? Character-level mining may reveal patterns that pre-tokenization would miss
-
-**Typing strategy**
-- Pre-typing: normalize `<NUM>` `<DATE>` `<UUID>` before mining—increases pattern frequency, loses fidelity
-- Post-typing: infer types from discovered slot contents—preserves fidelity, patterns may not surface
-- Baker-style parameterization: normalize identifiers and values to placeholders before mining, making "same structure, different atoms" exactly matchable
-- Hybrid approaches: mine on both skeleton and value streams in parallel?
+- Open question: should token boundaries be *discovered* from repeated structure rather than imposed? Character-level mining may reveal patterns that pre-tokenization would miss.
 
 **Implications**
-- Typing affects slot encoding cost: a slot known to be a bounded integer has lower MDL cost than an unconstrained string
-- Mining on "skeleton tokens" vs "value tokens" vs both
+- Mining on "skeleton tokens" (literals) vs "value tokens" (variable content) is resolved by the strict fidelity constraint: we mine literals, everything else is a slot.
 
 ### 2. Repeat Primitives + Candidate Control
 
@@ -131,16 +125,11 @@ Open question: which repeat type produces cleaner literal skeletons across diffe
 *What scoring and selection regime works in practice?*
 
 **MDL-style objective**
-```
-
-gain = savings_from_reuse − (template_cost + slot_encoding_cost + residual_cost)
-
-```
 Open question: optimal template selection relates to smallest grammar (NP-hard). What approximation strategies from grammar compression literature apply?
 
 **Cost modeling**
 - Explicit costs prevent degenerates: mostly-slot templates, tiny frequent literals, single-use templates
-- Slot encoding cost depends on type: bounded integer < date < unconstrained string
+- Slot encoding cost depends on content: pure whitespace < bounded integer < unconstrained string
 
 **Calibration** (not static weights)
 - How should costs adjust based on document size, average token length, observed entropy?
@@ -157,12 +146,12 @@ Open question: optimal template selection relates to smallest grammar (NP-hard).
 
 **Partial matches**
 - Policy needed when most but not all instances fit a pattern
-- Options: exclude outliers to residual, create variant templates, allow fuzzy matching (breaks exact reconstruction)
-- State chosen policy explicitly
+- Options: exclude outliers to residual, create variant templates
+- **Constraint**: No fuzzy matching. Exact matches only.
 
 **Residual classification**
 - Residual regions may be noise (truly random) or outliers (near-matches that failed threshold)
-- Outlier promotion policy: if a residual is 90% similar to existing template, force-fit as dirty instance or keep separate?
+- Outlier promotion policy: if a residual is 90% similar to existing template, force-fit as dirty instance (recording all diffs as slots) or keep separate?
 
 ### 5. Adjacent Domains
 
@@ -170,11 +159,10 @@ Open question: optimal template selection relates to smallest grammar (NP-hard).
 
 | Domain | Relevance | Adaptation needed |
 |--------|-----------|-------------------|
-| **Log parsing** (Drain, Spell, LogMine) | Typing + clustering + consensus | Assumes pre-segmented lines; continuous text? |
-| **Clone detection** | Abstract tokenization before mining | The pre-typing strategy |
+| **Log parsing** (Drain, Spell, LogMine) | Clustering + consensus | Assumes pre-segmented lines; continuous text? |
+| **Clone detection** | Abstract tokenization | Pre-typing (removed per strict fidelity) |
 | **Grammar compression** (Sequitur, Re-Pair) | Hierarchical structure discovery | May be the right primitive, not just related work |
 | **Web wrapper induction** (IEPAD) | Repeat detection + alignment for records | Directly analogous pipeline |
-| **Motif discovery** (bioinformatics) | Approximate matching | Only if fuzzy templates required |
 | **Diff algorithms** | Cleanup heuristics for small differences | Analogous to slot boundary decisions |
 
 ### 6. Implementation
@@ -189,7 +177,7 @@ Open question: optimal template selection relates to smallest grammar (NP-hard).
 
 **Architecture questions**
 - WASM candidates: SA+LCP construction, suffix automaton, grammar compression
-- JS layer: tokenization, typing, candidate filtering, scoring, selection, output
+- JS layer: tokenization, candidate filtering, scoring, selection, output
 - Memory strategy: TypedArrays, zero-copy views, chunking
 
 **WASM↔JS boundary**
@@ -206,23 +194,19 @@ Open question: optimal template selection relates to smallest grammar (NP-hard).
 ## Candidate Pipeline
 
 One possible architecture (to be validated against grammar-first alternative):
-```
 
 1. (optional) segment on structural markers (blank lines, headers)
-1. tokenize + optionally type → token IDs + positions
+1. tokenize → token IDs + positions
 1. build index (SA+LCP or grammar)
 1. extract repeated structure → candidates + occurrence lists
 1. form templates:
-
-- anchor-sequence search
-- align occurrences
-- apply gap-entropy heuristic
-
+   - anchor-sequence search
+   - align occurrences
+   - apply gap-entropy heuristic
 1. score with MDL-like objective
 1. select under overlap policy
 1. emit templates[] + instances[] + residual
 
-```
 ---
 
 ## Failure Modes
@@ -234,41 +218,3 @@ One possible architecture (to be validated against grammar-first alternative):
 | **Over-fragmentation** | Meaningful units split | Template co-occurrence stats | Anchor-sequence stitching pass |
 | **Slot bleed** | Boundaries misplaced | Alignment quality metrics | Boundary refinement |
 | **Degenerate templates** | Mostly slots, or tiny junk | MDL penalties | Minimum literal length, slot ratio caps |
-
----
-
-## Success Criteria
-
-_To be defined. Candidates:_
-
-- Extract N+ interpretable templates from a benchmark document
-- Latency threshold for document size
-- Compression ratio vs interpretability trade-off curve
-- Round-trip correctness (required, not optional)
-
----
-
-## Project Structure
-```
-
-/research/       # findings per research question
-/experiments/    # test documents, benchmarks
-/src/            # implementation
-
-```
----
-
-## Changelog
-
-- 2024-12-20: Initial project specification
-```
-
------
-
-This preserves all your detail while:
-
-- Elevating the two architectural forks as explicit open decisions
-- Softening “this prompt assumes X” to “working assumptions to validate”
-- Adding the residual classification and WASM boundary concerns from the other feedback
-- Creating a placeholder for success criteria
-- Framing the pipeline as “candidate” rather than decide
