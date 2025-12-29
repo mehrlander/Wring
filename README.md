@@ -211,10 +211,8 @@ One possible architecture (to be validated against grammar-first alternative):
 
 ## Failure Modes
 
-| Mode | Cause | Detection | Recovery |
-|------|-------|-----------|----------|
-| **Pattern explosion** | Too many candidates | Candidate count growth rate | Stricter thresholds, dominance pruning |
-| **False merge** | Distinct structures collapsed | Slot value entropy | Type splitting |
-| **Over-fragmentation** | Meaningful units split | Template co-occurrence stats | Anchor-sequence stitching pass |
-| **Slot bleed** | Boundaries misplaced | Alignment quality metrics | Boundary refinement |
-| **Degenerate templates** | Mostly slots, or tiny junk | MDL penalties | Minimum literal length, slot ratio caps |
+- **Token Splitting**: Pattern boundaries landing inside semantic atoms (words, numbers).
+- **Shattering**: Cohesive logical units fracturing into disconnected micro-templates.
+- **Conflation**: Distinct structures collapsing into a single generic template via shared syntax.
+- **Scale Bias**: Capturing the broad container while missing the discrete items within (or vice versa).
+- **Cost Modeling**: Miscalculating the utility of merging variants versus keeping them distinct.
