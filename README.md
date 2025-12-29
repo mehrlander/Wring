@@ -18,6 +18,7 @@ flowchart TD
     Primitives --> Literal["Literal (Invariant)"]
     Primitives --> Slot["Slot (Variable)"]
     Primitives --> Whitespace["Whitespace (Layout)"]
+```
 
 ## Use Cases
 Prioritize interpretability over maximal compression:
