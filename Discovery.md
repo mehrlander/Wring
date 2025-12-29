@@ -63,6 +63,6 @@ Template discovery is hierarchical. The process can be run recursively:
 ## Output Definitions
 
 * **Vocabulary**: The set of identified repeated substrings.
-* **Template**: A statistically significant sequence of Vocabulary items ($A \to $B \to $C).
+* **Template**: A statistically significant sequence of Vocabulary items ($A => $B => $C).
 * **Slot**: The variable gap between two Vocabulary items in a Template.
 * **Instance**: A specific occurrence of a Template in the raw text, binding specific Residue to the Slots.
