@@ -6,32 +6,30 @@ Single-document template induction from internal repetition.
 
 ## Problem
 
-Given one document, infer a compact set of parameterized templates (literals + slots) and an instance map (offsets + slot fills). Optimize for compression (MDL-ish) while preserving interpretability. Templates + instances must reconstruct the original exactly.
-
-Here is a simple flow chart:
+Given one document, infer a compact set of recurring patterns (templates) and an instance map of their occurrences. The goal is to optimize for a balance of compression and human interpretability, ensuring that the decomposed structure can reconstruct the original document exactly.
 
 ```mermaid
-graph TD;
-    A-->B;
-    A-->C;
-    B-->D;
-    C-->D;
-```
+flowchart TD
+    Document --> Instances
+    Document --> Residual["Residual (Unstructured)"]
+
+    Instances --> Primitives
+    
+    Primitives --> Literal["Literal (Invariant)"]
+    Primitives --> Slot["Slot (Variable)"]
+    Primitives --> Whitespace["Whitespace (Layout)"]
 
 ## Use Cases
-
 Prioritize interpretability over maximal compression:
+ * Structured documents (budget bills, legislation): infer markup structure for annotation or XML conversion
+ * Web development: convert repetitive HTML into data-driven JS generation
+ * Logs: separate boilerplate from variable content to surface the actual information
 
-- **Structured documents** (budget bills, legislation): infer markup structure for annotation or XML conversion
-- **Web development**: convert repetitive HTML into data-driven JS generation
-- **Logs**: separate boilerplate from variable content to surface the actual information
-
-## Constraints
-
-- **Input**: one string (~100KB–10MB)
-- **Output**: `templates[]`, `instances[]`, `residual`
-- **Target**: browser JS; WASM allowed for core indexing/mining
-- **Strict Fidelity**: All variation between instances is treated as slot content. We do not normalize, trim, or "clean" the input. `Template + Instances` must yield a byte-perfect reconstruction of the original input.
+## Core Objectives
+ * Character Allocation: In principle, every character in a document—including whitespace—is respected and allocated to one of three Primitive Types: Literals, Slots, or Whitespace. Any un-patterned text is designated as Residual.
+ * Reconstruction Fidelity: The default model aims for exact reproduction. However, by treating Whitespace as a distinct primitive, the system can provide mechanisms to expunge "formatting noise" from the output for better readability, acknowledging the trade-off in reproducibility.
+ * Structural Separation: The system decomposes the document into recurring structural patterns (templates) and their specific occurrences (instances), allowing for a clean division between boilerplate and variable content.
+ * Browser-First Performance: Discovery and indexing logic is optimized for the memory and execution limits of the browser environment (~100KB–10MB range), utilizing WASM for high-density indexing where necessary.
 
 ## Key Assumptions (Open)
 
