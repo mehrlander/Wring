@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Wring | Suffix Tree Pattern Engine</title>
+    <link href="https://cdn.jsdelivr.net/combine/npm/daisyui@5/themes.css,npm/daisyui@5,npm/tabulator-tables/dist/css/tabulator_simple.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/combine/npm/tabulator-tables,npm/@tailwindcss/browser@4,npm/@phosphor-icons/web,npm/clipboard"></script>
+    <script defer src="https://unpkg.com/alpinejs"></script>
+</head>
+<body class="bg-base-200 text-base-content min-h-screen font-sans">
+
+    <div x-data="wringApp" class="max-w-5xl mx-auto flex flex-col h-screen shadow-2xl bg-base-100">
+        
+        <div class="p-4 bg-base-100 border-b border-base-300 shrink-0 space-y-3">
+            <div class="flex items-center gap-3">
+                <i class="ph ph-unite text-primary text-3xl"></i>
+                <h1 class="text-xl font-black tracking-tight uppercase italic">Wring Engine</h1>
+            </div>
+
+            <div class="flex gap-2">
+                <input type="text" x-model="inputString" @keydown.enter="run()"
+                    placeholder="Input text for anchor analysis..."
+                    class="input input-bordered input-md flex-1 font-mono text-base focus:border-primary shadow-inner" />
+                <button @click="run()" class="btn btn-primary btn-md px-8 font-bold uppercase">Analyze</button>
+            </div>
+            
+            <div class="flex justify-between items-center px-1 font-mono text-[11px] uppercase tracking-widest font-bold">
+                <div class="flex gap-6 items-center">
+                    <span class="text-base-content/50">Nodes: <span class="text-info" x-text="stats.nodes"></span></span>
+                    <span class="text-base-content/50">Coverage: <span class="text-secondary" x-text="stats.coverage + '%'"></span></span>
+                </div>
+                
+                <button id="copyBtn" class="btn btn-sm btn-primary gap-2 min-w-[140px] shadow-sm">
+                    <i class="ph ph-copy text-lg"></i>
+                    <span>Copy JSON</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-hidden flex flex-col md:flex-row bg-base-100">
+            
+            <div class="w-full md:w-3/5 border-r border-base-300 flex flex-col overflow-hidden p-4 space-y-2">
+                <div class="flex justify-between items-center shrink-0">
+                    <h2 class="text-xs font-black uppercase text-base-content/40 tracking-widest">Repeat Registry (Structural Anchors)</h2>
+                </div>
+                <div id="patternTable" class="flex-1 rounded-box overflow-hidden border border-base-300"></div>
+            </div>
+
+            <div class="hidden md:flex flex-col w-2/5 overflow-hidden p-4 space-y-2 bg-base-200/30">
+                <h2 class="text-xs font-black uppercase text-base-content/40 tracking-widest">Topology Inspector</h2>
+                <div class="flex-1 bg-white border border-base-300 rounded-box p-3 overflow-auto">
+                    <pre id="treeOutput" class="font-mono text-[11px] leading-tight text-slate-700 whitespace-pre" x-html="renderedHtml"></pre>
+                </div>
+            </div>
+        </div>
+
+        <pre id="payload" class="hidden" x-text="JSON.stringify(registry, null, 2)"></pre>
+    </div>
+
+<script>
+class SuffixTreeEngine {
+    constructor(text) {
+        this.text = text;
+        const N = text.length;
+        const MAX_NODES = 2 * N + 2;
+        this.start = new Int32Array(MAX_NODES);
+        this.end = new Int32Array(MAX_NODES);
+        this.links = new Int32Array(MAX_NODES).fill(0);
+        this.firstChild = new Int32Array(MAX_NODES).fill(-1);
+        this.nextSibling = new Int32Array(MAX_NODES).fill(-1);
+        this.nodesCount = 1; 
+        this.globalEnd = -1;
+        this.build();
+    }
+
+    createNode(start, end) {
+        const idx = this.nodesCount++;
+        this.start[idx] = start;
+        this.end[idx] = end;
+        this.firstChild[idx] = -1;
+        this.nextSibling[idx] = -1;
+        return idx;
+    }
+
+    getEdgeLen(idx) {
+        return (this.end[idx] === -1 ? this.globalEnd : this.end[idx]) - this.start[idx] + 1;
+    }
+
+    build() {
+        let activeNode = 0, activeEdge = 0, activeLen = 0, remainder = 0;
+        for (let i = 0; i < this.text.length; i++) {
+            this.globalEnd = i; remainder++;
+            let lastNewNode = -1;
+            while (remainder > 0) {
+                if (activeLen === 0) activeEdge = i;
+                let prev = -1, child = this.firstChild[activeNode];
+                while (child !== -1 && this.text[this.start[child]] !== this.text[activeEdge]) {
+                    prev = child; child = this.nextSibling[child];
+                }
+                if (child === -1) {
+                    const leaf = this.createNode(i, -1);
+                    if (prev === -1) this.firstChild[activeNode] = leaf;
+                    else this.nextSibling[prev] = leaf;
+                    if (lastNewNode !== -1) this.links[lastNewNode] = activeNode;
+                    lastNewNode = -1;
+                } else {
+                    const edgeLen = this.getEdgeLen(child);
+                    if (activeLen >= edgeLen) {
+                        activeEdge += edgeLen; activeLen -= edgeLen;
+                        activeNode = child; continue;
+                    }
+                    if (this.text[this.start[child] + activeLen] === this.text[i]) {
+                        activeLen++;
+                        if (lastNewNode !== -1) this.links[lastNewNode] = activeNode;
+                        break; 
+                    }
+                    const split = this.createNode(this.start[child], this.start[child] + activeLen - 1);
+                    if (prev === -1) this.firstChild[activeNode] = split;
+                    else this.nextSibling[prev] = split;
+                    this.nextSibling[split] = this.nextSibling[child];
+                    const leaf = this.createNode(i, -1);
+                    this.firstChild[split] = child;
+                    this.nextSibling[child] = leaf;
+                    this.start[child] += activeLen;
+                    if (lastNewNode !== -1) this.links[lastNewNode] = split;
+                    lastNewNode = split;
+                }
+                remainder--;
+                if (activeNode === 0 && activeLen > 0) { activeLen--; activeEdge = i - remainder + 1; }
+                else if (activeNode !== 0) activeNode = this.links[activeNode];
+            }
+        }
+    }
+
+    // Augmented Post-order DFS to find maximal repeats
+    extractRepeats() {
+        const results = [];
+        const walk = (node, pathStr) => {
+            let freq = 0;
+            let isLeaf = true;
+            let child = this.firstChild[node];
+            
+            while (child !== -1) {
+                isLeaf = false;
+                const edgeLabel = this.text.substring(this.start[child], (this.end[child] === -1 ? this.globalEnd : this.end[child]) + 1);
+                freq += walk(child, pathStr + edgeLabel);
+                child = this.nextSibling[child];
+            }
+
+            if (isLeaf) return 1;
+
+            if (node !== 0 && pathStr.length > 0) {
+                results.push({
+                    pattern: pathStr,
+                    freq: freq,
+                    len: pathStr.length,
+                    score: freq * pathStr.length
+                });
+            }
+            return freq;
+        };
+        walk(0, "");
+        return results.sort((a,b) => b.score - a.score);
+    }
+
+    render(node = 0, prefix = "") {
+        let output = "";
+        let child = this.firstChild[node], children = [];
+        while (child !== -1) { children.push(child); child = this.nextSibling[child]; }
+        children.sort((a,b) => this.text[this.start[a]].localeCompare(this.text[this.start[b]]));
+        children.forEach((c, idx) => {
+            const isLast = idx === children.length - 1;
+            const label = this.text.substring(this.start[c], (this.end[c] === -1 ? this.globalEnd : this.end[c]) + 1);
+            const isLeaf = this.firstChild[c] === -1;
+            const color = isLeaf ? 'text-emerald-600' : 'text-primary font-bold';
+            output += `${prefix}<span class="text-base-content/20">${isLast?"└── ":"├── "}</span><span class="${color}">${label}</span>\n`;
+            output += this.render(c, prefix + (isLast ? "    " : "│   "));
+        });
+        return output;
+    }
+}
+
+document.addEventListener('alpine:init', () => {
+    Alpine.data('wringApp', () => ({
+        inputString: 'Invoice No: 123  Amount: $50  Total Due: $50  Invoice No: 456  Amount: $90  Total Due: $90',
+        renderedHtml: '',
+        registry: [],
+        table: null,
+        stats: { time: 0, nodes: 0, coverage: 0 },
+
+        init() {
+            const btn = document.querySelector("#copyBtn"), span = btn.querySelector("span");
+            const clip = new ClipboardJS(btn, { text: () => JSON.stringify(this.registry, null, 2) });
+            clip.on("success", () => {
+                const old = span.textContent; span.textContent = "Copied!";
+                btn.classList.replace("btn-primary", "btn-success");
+                setTimeout(() => { btn.classList.replace("btn-success", "btn-primary"); span.textContent = old; }, 1200);
+            });
+
+            this.table = new Tabulator("#patternTable", {
+                data: [],
+                layout: "fitColumns",
+                columns: [
+                    {title: "Anchor Pattern", field: "pattern", minWidth: 150, cssClass: "font-mono text-xs"},
+                    {title: "Freq", field: "freq", width: 60, hozAlign: "center"},
+                    {title: "Len", field: "len", width: 60, hozAlign: "center"},
+                    {title: "Score", field: "score", width: 80, hozAlign: "right", cssClass: "font-bold text-primary"}
+                ]
+            });
+            this.run();
+        },
+
+        run() {
+            if (!this.inputString) return;
+            const t0 = performance.now();
+            const engine = new SuffixTreeEngine(this.inputString);
+            const t1 = performance.now();
+            
+            this.renderedHtml = engine.render();
+            const rawRepeats = engine.extractRepeats();
+            
+            // Filter: If pattern B contains A and has same frequency, A is a decoy.
+            this.registry = rawRepeats.filter((r, i) => {
+                return !rawRepeats.some((other, j) => i !== j && other.pattern.includes(r.pattern) && other.freq === r.freq);
+            }).slice(0, 20);
+
+            this.table.setData(this.registry);
+            this.stats.nodes = engine.nodesCount;
+            this.stats.time = (t1 - t0).toFixed(2);
+            
+            // Calc coverage (rough estimate of string reduction)
+            const totalRep = this.registry.reduce((acc, curr) => acc + curr.score, 0);
+            this.stats.coverage = ((totalRep / (this.inputString.length * 2)) * 100).toFixed(1);
+        }
+    }));
+});
+</script>
+</body>
+</html>
