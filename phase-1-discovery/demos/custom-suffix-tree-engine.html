@@ -3,59 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Wring | Suffix Tree Pattern Engine</title>
+    <title>Wring | Phase 1 Discovery (Validated)</title>
     <link href="https://cdn.jsdelivr.net/combine/npm/daisyui@5/themes.css,npm/daisyui@5,npm/tabulator-tables/dist/css/tabulator_simple.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/combine/npm/tabulator-tables,npm/@tailwindcss/browser@4,npm/@phosphor-icons/web,npm/clipboard"></script>
     <script defer src="https://unpkg.com/alpinejs"></script>
 </head>
-<body class="bg-base-200 text-base-content min-h-screen font-sans">
+<body class="bg-base-200 min-h-screen font-sans p-2">
 
-    <div x-data="wringApp" class="max-w-5xl mx-auto flex flex-col h-screen shadow-2xl bg-base-100">
+    <div x-data="wringApp" class="max-w-6xl mx-auto flex flex-col h-[95vh] shadow-2xl bg-base-100 rounded-xl overflow-hidden">
         
         <div class="p-4 bg-base-100 border-b border-base-300 shrink-0 space-y-3">
-            <div class="flex items-center gap-3">
-                <i class="ph ph-unite text-primary text-3xl"></i>
-                <h1 class="text-xl font-black tracking-tight uppercase italic">Wring Engine</h1>
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="ph ph-shield-check text-success text-2xl"></i>
+                    <h1 class="text-lg font-black tracking-tight uppercase italic text-slate-700">Wring Phase 1 Validated</h1>
+                </div>
+                <div class="flex gap-1 bg-base-200 p-1 rounded-lg">
+                    <button @click="view = 'human'" :class="view === 'human' ? 'btn-primary' : 'btn-ghost'" class="btn btn-xs">Human</button>
+                    <button @click="view = 'machine'" :class="view === 'machine' ? 'btn-primary' : 'btn-ghost'" class="btn btn-xs">Machine</button>
+                </div>
             </div>
 
             <div class="flex gap-2">
-                <input type="text" x-model="inputString" @keydown.enter="run()"
-                    placeholder="Input text for anchor analysis..."
-                    class="input input-bordered input-md flex-1 font-mono text-base focus:border-primary shadow-inner" />
-                <button @click="run()" class="btn btn-primary btn-md px-8 font-bold uppercase">Analyze</button>
+                <input type="text" x-model="inputString" @input.debounce.300ms="run()" class="input input-bordered input-sm flex-1 font-mono shadow-inner" />
+                <button @click="run()" class="btn btn-primary btn-sm px-6 font-bold uppercase">Analyze</button>
             </div>
             
-            <div class="flex justify-between items-center px-1 font-mono text-[11px] uppercase tracking-widest font-bold">
-                <div class="flex gap-6 items-center">
-                    <span class="text-base-content/50">Nodes: <span class="text-info" x-text="stats.nodes"></span></span>
-                    <span class="text-base-content/50">Coverage: <span class="text-secondary" x-text="stats.coverage + '%'"></span></span>
+            <div class="flex justify-between items-center font-mono text-[10px] uppercase tracking-widest font-bold">
+                <div class="flex gap-4">
+                    <span>Coverage: <span class="text-secondary font-black" x-text="stats.coverage + '%'"></span></span>
+                    <span>Allocation: <span :class="stats.valid ? 'text-success' : 'text-error'" x-text="stats.valid ? 'PASSED' : 'FAILED'"></span></span>
                 </div>
                 
-                <button id="copyBtn" class="btn btn-sm btn-primary gap-2 min-w-[140px] shadow-sm">
-                    <i class="ph ph-copy text-lg"></i>
-                    <span>Copy JSON</span>
+                <button id="copyBtn" class="btn btn-xs btn-primary gap-1 shadow-sm px-4 min-w-[120px]">
+                    <i class="ph ph-copy"></i> <span>Copy JSON</span>
                 </button>
             </div>
         </div>
 
-        <div class="flex-1 overflow-hidden flex flex-col md:flex-row bg-base-100">
-            
-            <div class="w-full md:w-3/5 border-r border-base-300 flex flex-col overflow-hidden p-4 space-y-2">
-                <div class="flex justify-between items-center shrink-0">
-                    <h2 class="text-xs font-black uppercase text-base-content/40 tracking-widest">Repeat Registry (Structural Anchors)</h2>
+        <div class="flex-1 flex overflow-hidden">
+            <div class="w-1/2 flex flex-col border-r border-base-300 p-2 overflow-hidden">
+                <div x-show="view === 'human'" class="flex-1 flex flex-col overflow-hidden">
+                    <div id="patternTable" class="flex-1 rounded-box border border-base-300"></div>
                 </div>
-                <div id="patternTable" class="flex-1 rounded-box overflow-hidden border border-base-300"></div>
+                <div x-show="view === 'machine'" class="flex-1 bg-zinc-950 text-emerald-500 font-mono text-[10px] p-4 overflow-auto rounded-box">
+                    <div class="space-y-4">
+                        <div><span class="text-zinc-500">// vocabulary [offset, len, id]</span><br><span x-text="formatTypedArray(machineData.vocabulary)"></span></div>
+                        <div><span class="text-zinc-500">// positions [id, count, p0, p1...]</span><br><span x-text="formatTypedArray(machineData.positions)"></span></div>
+                        <div><span class="text-zinc-500">// symbolStream [id0, id1...]</span><br><span x-text="formatTypedArray(machineData.symbolStream)"></span></div>
+                    </div>
+                </div>
             </div>
 
-            <div class="hidden md:flex flex-col w-2/5 overflow-hidden p-4 space-y-2 bg-base-200/30">
-                <h2 class="text-xs font-black uppercase text-base-content/40 tracking-widest">Topology Inspector</h2>
-                <div class="flex-1 bg-white border border-base-300 rounded-box p-3 overflow-auto">
-                    <pre id="treeOutput" class="font-mono text-[11px] leading-tight text-slate-700 whitespace-pre" x-html="renderedHtml"></pre>
+            <div class="flex-1 flex flex-col p-2 bg-base-200/30 overflow-hidden">
+                <div class="flex justify-between text-[10px] font-black uppercase text-base-content/40 tracking-widest mb-1 px-1">
+                    <span>Structural Alignment Map</span>
+                    <span x-text="'Residuals: ' + stats.residualCount"></span>
+                </div>
+                <div class="flex-1 bg-white border border-base-300 rounded-box p-4 overflow-auto shadow-inner">
+                    <div id="visualOutput" class="font-mono text-xs leading-relaxed whitespace-pre" x-html="highlightedText"></div>
                 </div>
             </div>
         </div>
-
-        <pre id="payload" class="hidden" x-text="JSON.stringify(registry, null, 2)"></pre>
     </div>
 
 <script>
@@ -133,105 +142,165 @@ class SuffixTreeEngine {
         }
     }
 
-    // Augmented Post-order DFS to find maximal repeats
-    extractRepeats() {
-        const results = [];
-        const walk = (node, pathStr) => {
-            let freq = 0;
-            let isLeaf = true;
+    extractDiscovery() {
+        const repeats = [];
+        const n = this.text.length;
+        const walk = (node, depth) => {
+            const leaves = [];
             let child = this.firstChild[node];
-            
+            if (child === -1) return [n - depth];
             while (child !== -1) {
-                isLeaf = false;
-                const edgeLabel = this.text.substring(this.start[child], (this.end[child] === -1 ? this.globalEnd : this.end[child]) + 1);
-                freq += walk(child, pathStr + edgeLabel);
+                const childLeaves = walk(child, depth + this.getEdgeLen(child));
+                leaves.push(...childLeaves);
                 child = this.nextSibling[child];
             }
-
-            if (isLeaf) return 1;
-
-            if (node !== 0 && pathStr.length > 0) {
-                results.push({
-                    pattern: pathStr,
-                    freq: freq,
-                    len: pathStr.length,
-                    score: freq * pathStr.length
+            if (node !== 0 && depth > 0) {
+                repeats.push({
+                    pattern: this.text.substring(leaves[0], leaves[0] + depth),
+                    freq: leaves.length,
+                    len: depth,
+                    score: leaves.length * depth,
+                    positions: leaves.sort((a,b) => a-b),
+                    offset: leaves[0]
                 });
             }
-            return freq;
+            return leaves;
         };
-        walk(0, "");
-        return results.sort((a,b) => b.score - a.score);
-    }
-
-    render(node = 0, prefix = "") {
-        let output = "";
-        let child = this.firstChild[node], children = [];
-        while (child !== -1) { children.push(child); child = this.nextSibling[child]; }
-        children.sort((a,b) => this.text[this.start[a]].localeCompare(this.text[this.start[b]]));
-        children.forEach((c, idx) => {
-            const isLast = idx === children.length - 1;
-            const label = this.text.substring(this.start[c], (this.end[c] === -1 ? this.globalEnd : this.end[c]) + 1);
-            const isLeaf = this.firstChild[c] === -1;
-            const color = isLeaf ? 'text-emerald-600' : 'text-primary font-bold';
-            output += `${prefix}<span class="text-base-content/20">${isLast?"└── ":"├── "}</span><span class="${color}">${label}</span>\n`;
-            output += this.render(c, prefix + (isLast ? "    " : "│   "));
-        });
-        return output;
+        walk(0, 0);
+        return repeats.sort((a,b) => b.score - a.score);
     }
 }
 
 document.addEventListener('alpine:init', () => {
     Alpine.data('wringApp', () => ({
         inputString: 'Invoice No: 123  Amount: $50  Total Due: $50  Invoice No: 456  Amount: $90  Total Due: $90',
-        renderedHtml: '',
+        view: 'human',
+        stats: { coverage: 0, residualCount: 0, valid: false },
+        machineData: {},
+        highlightedText: '',
         registry: [],
-        table: null,
-        stats: { time: 0, nodes: 0, coverage: 0 },
 
         init() {
-            const btn = document.querySelector("#copyBtn"), span = btn.querySelector("span");
-            const clip = new ClipboardJS(btn, { text: () => JSON.stringify(this.registry, null, 2) });
-            clip.on("success", () => {
-                const old = span.textContent; span.textContent = "Copied!";
-                btn.classList.replace("btn-primary", "btn-success");
-                setTimeout(() => { btn.classList.replace("btn-success", "btn-primary"); span.textContent = old; }, 1200);
-            });
-
             this.table = new Tabulator("#patternTable", {
-                data: [],
                 layout: "fitColumns",
                 columns: [
-                    {title: "Anchor Pattern", field: "pattern", minWidth: 150, cssClass: "font-mono text-xs"},
-                    {title: "Freq", field: "freq", width: 60, hozAlign: "center"},
-                    {title: "Len", field: "len", width: 60, hozAlign: "center"},
-                    {title: "Score", field: "score", width: 80, hozAlign: "right", cssClass: "font-bold text-primary"}
+                    {title: "Pattern", field: "pattern", cssClass: "font-mono text-[10px] text-primary"},
+                    {title: "Freq", field: "freq", width: 45},
+                    {title: "Score", field: "score", width: 60, hozAlign: "right"}
                 ]
             });
+            
+            // Restore Flash Success Message
+            const btn = document.querySelector("#copyBtn"), span = btn.querySelector("span"), icon = btn.querySelector("i");
+            const flash = (ms = 1200) => {
+                const oldText = span.textContent;
+                span.textContent = "Copied!";
+                btn.classList.replace("btn-primary", "btn-success");
+                icon.classList.replace("ph-copy", "ph-check-circle");
+                setTimeout(() => {
+                    btn.classList.replace("btn-success", "btn-primary");
+                    icon.classList.replace("ph-check-circle", "ph-copy");
+                    span.textContent = oldText;
+                }, ms);
+            };
+
+            const clip = new ClipboardJS(btn, {
+                text: () => JSON.stringify({
+                    spec: {
+                        vocabulary: Array.from(this.machineData.vocabulary),
+                        positions: Array.from(this.machineData.positions),
+                        symbolStream: Array.from(this.machineData.symbolStream),
+                        residual: this.machineData.residual
+                    }
+                }, null, 2)
+            });
+            clip.on('success', () => flash());
+
             this.run();
         },
 
         run() {
             if (!this.inputString) return;
-            const t0 = performance.now();
             const engine = new SuffixTreeEngine(this.inputString);
-            const t1 = performance.now();
-            
-            this.renderedHtml = engine.render();
-            const rawRepeats = engine.extractRepeats();
-            
-            // Filter: If pattern B contains A and has same frequency, A is a decoy.
-            this.registry = rawRepeats.filter((r, i) => {
-                return !rawRepeats.some((other, j) => i !== j && other.pattern.includes(r.pattern) && other.freq === r.freq);
-            }).slice(0, 20);
-
+            const raw = engine.extractDiscovery();
+            this.registry = raw.filter((r, i) => {
+                return !raw.some((other, j) => i !== j && other.pattern.includes(r.pattern) && other.freq === r.freq);
+            }).slice(0, 15).map((r, i) => ({ ...r, id: i }));
             this.table.setData(this.registry);
-            this.stats.nodes = engine.nodesCount;
-            this.stats.time = (t1 - t0).toFixed(2);
-            
-            // Calc coverage (rough estimate of string reduction)
-            const totalRep = this.registry.reduce((acc, curr) => acc + curr.score, 0);
-            this.stats.coverage = ((totalRep / (this.inputString.length * 2)) * 100).toFixed(1);
+            this.processPhase2(this.inputString, this.registry);
+        },
+
+        processPhase2(text, vocabulary) {
+            const instances = [];
+            vocabulary.forEach(v => {
+                v.positions.forEach(pos => {
+                    instances.push({ id: v.id, start: pos, end: pos + v.len, len: v.len });
+                });
+            });
+
+            instances.sort((a, b) => b.len - a.len || a.start - b.start);
+            const allocated = new Uint8Array(text.length);
+            const finalInstances = [];
+
+            for (const inst of instances) {
+                let overlap = false;
+                for (let i = inst.start; i < inst.end; i++) if (allocated[i]) overlap = true;
+                if (!overlap) {
+                    for (let i = inst.start; i < inst.end; i++) allocated[i] = 1;
+                    finalInstances.push(inst);
+                }
+            }
+            finalInstances.sort((a, b) => a.start - b.start);
+
+            const vocabArr = [], posArr = [], streamArr = finalInstances.map(fi => fi.id);
+            vocabulary.forEach(v => {
+                vocabArr.push(v.offset, v.len, v.id);
+                const used = finalInstances.filter(fi => fi.id === v.id).map(fi => fi.start);
+                if (used.length > 0) posArr.push(v.id, used.length, ...used);
+            });
+
+            const residuals = [];
+            let lastIdx = 0;
+            finalInstances.forEach(inst => {
+                if (inst.start > lastIdx) residuals.push({ start: lastIdx, end: inst.start });
+                lastIdx = inst.end;
+            });
+            if (lastIdx < text.length) residuals.push({ start: lastIdx, end: text.length });
+
+            const symChars = finalInstances.reduce((a, b) => a + b.len, 0);
+            const resChars = residuals.reduce((a, b) => a + (b.end - b.start), 0);
+            this.stats.valid = (symChars + resChars === text.length);
+
+            this.machineData = {
+                vocabulary: new Uint32Array(vocabArr),
+                positions: new Uint32Array(posArr),
+                symbolStream: new Uint32Array(streamArr),
+                residual: residuals
+            };
+
+            let html = "";
+            const combined = [
+                ...finalInstances.map(i => ({...i, type: 'sym'})),
+                ...residuals.map(r => ({...r, type: 'res'}))
+            ].sort((a, b) => a.start - b.start);
+
+            combined.forEach(block => {
+                const slice = text.substring(block.start, block.end);
+                if (block.type === 'sym') {
+                    html += `<span class="bg-blue-100 text-blue-700 border-b border-blue-300" title="ID: ${block.id}">${slice}</span>`;
+                } else {
+                    html += `<span class="text-zinc-400 italic">${slice}</span>`;
+                }
+            });
+
+            this.highlightedText = html;
+            this.stats.residualCount = residuals.length;
+            this.stats.coverage = ((symChars / text.length) * 100).toFixed(1);
+        },
+
+        formatTypedArray(arr) {
+            if (!arr) return "";
+            return "[" + arr.slice(0, 24).join(", ") + (arr.length > 24 ? "..." : "") + "]";
         }
     }));
 });
