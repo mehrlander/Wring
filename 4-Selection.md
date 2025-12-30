@@ -108,6 +108,8 @@ dictionaryCost = sum over templates of (literalBytes + slotOverhead * slotCount)
 dataCost = sum over instances of (templateIdBits + slotEncodingCost) + residualCost
 ```
 
+Where `templateIdBits` is the cost to reference a specific template (e.g., `ceil(log2(selectedTemplateCount))` bits per instance reference).
+
 ### Greedy Selection (Krimp-style)
 
 1. Sort templates by compression gain (coverage - cost)

@@ -22,7 +22,7 @@ Reduce document to symbol stream; score pairwise consistency; mine anchor chains
 | `distanceMatrix` | `Float32Array` | Sparse pairwise consistency scores: `[symbolA, symbolB, score, ...]` |
 | `candidateChains` | `Array<Uint32Array>` | Ordered symbol sequences with consistent spacing |
 | `chainPositions` | `Array<Uint32Array>` | Per-chain occurrence positions in document |
-| `residual` | `Array<{start: number, end: number}>` | Spans not participating in any chain |
+| `residual` | `Array<{start: number, end: number}>` | Spans not participating in any chain. Maintains Character Allocation: every byte is in either a chain occurrence or residual. |
 
 ---
 
