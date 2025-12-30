@@ -1,27 +1,17 @@
-# Template Terminology Brainstorm
+# Template Terminology
 
-## Context
+We are focused on identifying template patterns: structures implied by the text itself.
 
-We are focused on identifying template patterns in text—or, by one way of thinking, templates that are *implied* by the text.
+A log file implies the format string that produced it. A legal document implies the boilerplate it was drafted from. We don’t assume a generative history, but want templates that would help produce what we observe. Templates that, shown to the creator, would prompt a nod rather than a squint.
 
-“Implied” is interesting. It suggests the template is a characteristic of the text, possibly connected to its generation. A log file implies the format string that produced it. A legal document implies the boilerplate it was drafted from. Often true, not always assumed. We don’t require a generative history; we only require observable repetition with variation.
+We would like to be one level of abstraction up from the text itself. Not the deep latent structure of topic modeling, but the immediate prototypes that instances exemplify. The form and its manifestations, going back to Plato. Seeing the forest from the trees.
 
-At the same time, we’re not looking for latent structure hidden beneath the surface. This isn’t topic modeling or dimensionality reduction. The patterns we seek are *right there*—repeated literals, visible variation. The challenge is terminology, not detection.
-
-A template is an abstraction. It is something we recognize *across* instances—the prototype that instances exemplify. When you abstract, you get a type and its tokens, a universal and its particulars, a form and its manifestations. Russell, Wittgenstein, Plato if you like. The template is the form; instances are where it shows up.
-
-So the verbs split naturally:
-
-- An **instance** appears (concrete, locatable, in the text)
-- A **template** matches (it aligns with instances, describes their shape)
-- A **template** emerges or derives (it comes into being when we recognize what instances share)
-
-“Template” itself may carry baggage—it often implies generation, a mold that produces. But our project inverts that. We’re not stamping out instances from templates; we’re inducing templates from instances. The text exists first. The template is what we find.
-
-This opens two distinct vocabulary needs:
+To help clarify the intention, two angles of terminology are explored here:
 
 1. **Matching**: How a template relates to text once it exists. Fitting, aligning, seating, binding.
-1. **Emerging**: How a template comes into being. Deriving, crystallizing, inducing, distilling.
+1. **Emergence**: How a template comes into being from instances. Deriving, crystallizing, inducing, distilling.
+
+“Template” itself may carry baggage. It often implies generation, a mold that produces. But our project inverts that. We’re not stamping out instances from templates; we’re inducing templates from instances. The text exists first. The template is what we find.
 
 -----
 
