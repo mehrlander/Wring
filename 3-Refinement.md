@@ -21,7 +21,7 @@ Gravitate templates toward idealized forms; distinguish alignment from consolida
 |-------|------|-------------|
 | `templates` | `Array<Template>` | Refined template structures (see below) |
 | `instances` | `Array<Instance>` | Per-template occurrence bindings (see below) |
-| `residual` | `Array<{start: number, end: number}>` | Spans not bound to any template instance |
+| `residual` | `Array<{start: number, end: number}>` | Spans not bound to any template instance. Maintains Character Allocation: every byte is in either a template instance or residual. |
 
 ```typescript
 interface Template {
@@ -35,7 +35,7 @@ interface Instance {
   templateId: number;
   start: number;              // Document offset
   end: number;
-  slotValues: Uint32Array;    // [offset, length, offset, length, ...]
+  slotValues: Uint32Array;    // [offset, length, ...] - absolute offsets into the original document string
 }
 
 interface SlotType {

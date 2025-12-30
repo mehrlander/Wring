@@ -20,8 +20,8 @@ Enumerate repeated substrings; build the vocabulary that subsequent phases consu
 |-------|------|-------------|
 | `vocabulary` | `Uint32Array` | Flat array: `[substringOffset, substringLength, symbolId, ...repeating]` |
 | `positions` | `Uint32Array` | Per-symbol occurrence positions: `[symbolId, count, pos0, pos1, ..., symbolId, count, ...]` |
-| `symbolStream` | `Uint32Array` | Document reduced to symbol IDs in occurrence order |
-| `residual` | `Array<{start: number, end: number}>` | Spans not covered by any vocabulary item |
+| `symbolStream` | `Uint32Array` | High-density array of vocabulary item IDs in occurrence order. Does NOT contain sentinels for gaps; inter-symbol distances must be calculated using the `positions` array which maps IDs to raw document offsets. |
+| `residual` | `Array<{start: number, end: number}>` | **Source of truth** for all characters not captured in the `symbolStream`. Every byte in the original document is accounted for in either a vocabulary item occurrence or a residual span. |
 
 The `vocabulary` array provides the Vocabulary-to-Symbol mapping: each entry maps a substring (via offset + length into the original document) to a unique symbol ID.
 
