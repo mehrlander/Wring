@@ -52,4 +52,3 @@ The engine produces a Repeat Registry optimized for downstream induction:
 ]
 
 Next Step: Proceed to Phase 2: Pairwise Consistency, where these registries are intersected across multiple documents to define global structural anchors and extract variable slot content.
-Would you like me to prepare the Phase 2 Starter Prompt to kick off the next stage of the project?
