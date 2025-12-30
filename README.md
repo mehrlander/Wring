@@ -49,76 +49,23 @@ Prioritize interpretability over maximal compression:
 
 ## Pipeline
 
-Four phases, each with associated optimization problems. Any phase may terminate early when diminishing returns or residual entropy indicate satiety.
+Four phases, each documented in detail. Any phase may terminate early when diminishing returns or residual entropy indicate satiety.
 
-### 1. Substring Discovery
+| Phase | Goal | Key Output |
+|-------|------|------------|
+| [1-Discovery](1-Discovery.md) | Enumerate repeated substrings | Vocabulary-to-Symbol mapping |
+| [2-Topology](2-Topology.md) | Score pairwise consistency; mine anchor chains | Distance matrix, candidate chains |
+| [3-Refinement](3-Refinement.md) | Align instances; merge/split templates | Refined templates with typed slots |
+| [4-Selection](4-Selection.md) | Resolve overlaps; select final template set | Non-overlapping instances, residual |
 
-Enumerate repeated substrings; rank by structural signal.
-
-| Problem | Input | Objective | Constraint |
-|---|---|---|---|
-| Repeat Enumeration | Document, min length, min frequency | All maximal repeated substrings | O(n) space; efficient LCP-interval traversal |
-| Anchor Ranking | Repeated substrings | Score by structural signal vs. incidental repetition | Length × frequency baseline; topological neighborhood weight |
-
-**Algorithms**: Suffix array + LCP interval traversal; suffix tree internal nodes; suffix automaton. Winnowing/fingerprinting for coarse seeding on large documents.
-
-**Failure modes**:
-- *Token Splitting*: Pattern boundaries landing inside semantic atoms (words, numbers)
-
-### 2. Topology
-
-Reduce document to symbol stream; score pairwise consistency; mine anchor chains.
-
-| Problem | Input | Objective | Constraint |
-|---|---|---|---|
-| Pairwise Consistency | Symbol stream, symbol pair (A, B) | Measure variance of gap distances across all co-occurrences | Low variance → structural; high variance → floating |
-| Distance Matrix | Symbol stream, all symbol pairs | Pairwise consistency scores as adjacency weights | Sparse: only pairs within max gap window |
-| Sequence Mining | Distance matrix, max gap | Ordered anchor chains (paths) with consistent spacing | Chains must appear ≥ k times |
-
-**Algorithms**: Sequential pattern mining (PrefixSpan, GSP) with max-gap constraints. Distance decay scoring. Cross-correlation for lag detection.
-
-**Failure modes**:
-- *Conflation*: Distinct structures collapsing into a single generic template via shared syntax
-- *Scale Bias*: Capturing the broad container while missing discrete items within (or vice versa)
-
-### 3. Refinement
-
-Gravitate templates toward idealized forms; adjust slot boundaries; infer slot types.
-
-| Problem | Input | Objective | Constraint |
-|---|---|---|---|
-| Idealized Refinement | Candidate template, bound instances | Gravitate toward instances with coherent slot signatures | Reject/expunge instances that pollute the structural model |
-| Template Merge/Split | Similar or high-variance templates | Unify or partition templates toward idealized form | Merge/split based on dictionary cost vs. slot entropy |
-| Slot Boundary Refinement | Template skeleton, instance alignments | Minimize slot entropy while preserving token integrity | Boundaries align with token edges or stable whitespace boundaries |
-| Slot Typing | Slot values across instances | Infer regex, character class, or grammar for content | Aids interpretability and validation |
-
-**Algorithms**: Center-star alignment for multi-instance comparison. Gap entropy as stitching heuristic. Edit distance for near-miss detection.
-
-**Failure modes**:
-- *Shattering*: Cohesive logical units fracturing into disconnected micro-templates
-- *Cost Modeling*: Miscalculating the utility of merging variants versus keeping them distinct
-
-### 4. Selection
-
-Resolve overlaps; infer nesting; select final template set.
-
-| Problem | Input | Objective | Constraint |
-|---|---|---|---|
-| Overlap Resolution | Conflicting candidate instances | Select non-overlapping subset maximizing total gain | Weighted interval scheduling (flat) or DAG (hierarchical) |
-| Hierarchical Nesting | Selected templates/instances | Infer nesting; build structural parse tree | Parent must fully enclose child instances |
-| Template Selection | Global template pool | Maximize total DRY gain and intelligibility | Balance model complexity vs. document coverage |
-| Residual Diagnosis | Unmatched spans | Distinguish noise from near-misses; assess entropy | High entropy → satiety; low entropy → latent structure |
-
-**Algorithms**: Weighted interval scheduling (flat model). DAG selection for hierarchical. Krimp-style greedy (accept if total code length decreases). MDL-style objective with explicit costs to prevent degenerates.
-
-**Failure modes**:
-- *Cost Modeling*: Slot encoding costs that don't reflect actual complexity (whitespace < bounded integer < unconstrained string)
+Each phase document specifies concrete Input/Output interfaces, optimization problems, algorithms, and failure modes.
 
 ---
 
-## Supporting Documents
+## Exploration
+
+Conceptual foundations and terminology live in `exploration/`:
 
 - **Intuition.md**: First-principles observations about template structure
 - **Terms.md**: Vocabulary for matching (seat, bind, register) and emergence (crystallize, induce, distill)
 - **Order.md**: Quantifying ordered relationships; distinguishing structural anchors from variable decoys
-- **Discovery.md**: The symbol-reduction framing of template inference
