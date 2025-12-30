@@ -128,11 +128,6 @@ recognize, discern, perceive, apprehend, identify, make out, pick out, distingui
 
 ## Notes
 
-We focused here on two aspects of our inquiry:
-
-1. **Matching**: how a template relates to text (seat, bind, register, agree)
-1. **Emerging**: how a template comes to be (emerge, derive, crystallize, induce)
-
 We could look further at specific aspects of emergence:
 
 **Scan / Tally** — Finding the recurring substrings. The anchor candidates. This is the plumbing-the-document phase—enumeration, scoring, filtering. Terms: scan, tally, enumerate, survey, census, inventory, count, catalog.
