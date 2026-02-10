@@ -1,5 +1,7 @@
 # Phase 4: Selection
 
+> **Status: CURRENT.** The algorithms in this spec (weighted interval scheduling, MDL objective, hierarchy inference, residual diagnosis) are path-independent and apply without modification to the Sequitur + Bookend Merge architecture. See [`ARCHITECTURE.md`](../ARCHITECTURE.md).
+
 Global optimization; final arbitration of the document's real estate.
 
 ---
