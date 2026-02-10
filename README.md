@@ -2,7 +2,7 @@
 
 Single-document template induction from internal repetition.
 
-**Status**: Research phase
+**Status**: Research phase — see [`ARCHITECTURE.md`](ARCHITECTURE.md) for the canonical pipeline description
 
 ## Problem
 
@@ -49,16 +49,26 @@ Prioritize interpretability over maximal compression:
 
 ## Pipeline
 
-Four phases, each documented in detail. Any phase may terminate early when diminishing returns or residual entropy indicate satiety.
+Five stages. See [`ARCHITECTURE.md`](ARCHITECTURE.md) for full detail.
 
-| Phase | Goal | Key Output |
+| Stage | Goal | Key Output |
 |-------|------|------------|
-| [1-Discovery](1-Discovery.md) | Enumerate repeated substrings | Vocabulary-to-Symbol mapping |
-| [2-Topology](2-Topology.md) | Score pairwise consistency; mine anchor chains | Distance matrix, candidate chains |
-| [3-Refinement](3-Refinement.md) | Align instances; merge/split templates | Refined templates with typed slots |
-| [4-Selection](4-Selection.md) | Resolve overlaps; select final template set | Non-overlapping instances, residual |
+| Tokenize | Segment document into symbol stream | Token stream (the alphabet for Sequitur) |
+| Sequitur | Find exact repeats; build grammar | Rules: sequences of terminals and rule references |
+| Bookend Merge | Align near-identical rules; discover slots | Slotted templates (literals + variable positions) |
+| Selection | Rank by MDL; resolve overlaps | Non-overlapping template instances + residual |
+| Extraction | Map to source text; verify reconstruction | Instance map with slot values as document offsets |
 
-Each phase document specifies concrete Input/Output interfaces, optimization problems, algorithms, and failure modes.
+### Earlier phase specs
+
+The `phase-*/` directories contain detailed specs (interfaces, algorithms, failure modes) written before the Sequitur + Bookend Merge pivot. Each has a status header indicating what still applies. They remain useful reference material.
+
+| Directory | Status |
+|---|---|
+| [`phase-1-discovery/`](phase-1-discovery/README.md) | Partially superseded (interfaces and failure modes valid; algorithm replaced by Sequitur) |
+| [`phase-2-topology/`](phase-2-topology/README.md) | Superseded (replaced by Bookend Merge) |
+| [`phase-3-refinement/`](phase-3-refinement/README.md) | Partially superseded (alignment and consolidation concepts valid; input interface changed) |
+| [`phase-4-selection/`](phase-4-selection/README.md) | Current (algorithms are path-independent) |
 
 ---
 

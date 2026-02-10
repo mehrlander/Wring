@@ -1,5 +1,7 @@
 # Phase 3: Refinement
 
+> **Status: PARTIALLY SUPERSEDED.** Alignment, consolidation, and slot typing concepts still apply to the Bookend Merge output. The center-star alignment algorithm and MDL cost model remain valid. The input interface has changed (templates come from Bookend Merge, not chain mining). See [`ARCHITECTURE.md`](../ARCHITECTURE.md).
+
 Gravitate templates toward idealized forms; distinguish alignment from consolidation.
 
 ---
