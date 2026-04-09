@@ -2,7 +2,9 @@
 
 Single-document template induction from internal repetition.
 
-**Status**: Research phase — see [`ARCHITECTURE.md`](ARCHITECTURE.md) for the canonical pipeline description
+**Status**: Research phase — first working implementation of Bookend Merge now available
+
+See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the canonical pipeline description
 
 ## Problem
 
@@ -58,6 +60,10 @@ Five stages. See [`ARCHITECTURE.md`](ARCHITECTURE.md) for full detail.
 | Bookend Merge | Align near-identical rules; discover slots | Slotted templates (literals + variable positions) |
 | Selection | Rank by MDL; resolve overlaps | Non-overlapping template instances + residual |
 | Extraction | Map to source text; verify reconstruction | Instance map with slot values as document offsets |
+
+### Working implementation
+
+[`dom-signatures/`](dom-signatures/README.md) contains the first working implementation of Stage 3 (Bookend Merge), applied to DOM signature strings from a real web UI. Includes an [interactive demo](dom-signatures/demo.html) and a test harness covering 81 signatures. Groups 89-91% of inputs with 100% reconstruction fidelity.
 
 ### Earlier phase specs
 
