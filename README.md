@@ -2,9 +2,28 @@
 
 Single-document template induction from internal repetition.
 
-**Status**: Research phase — first working implementation of Bookend Merge now available
+**Status**: Research phase. One of the five pipeline stages — Bookend Merge — has a working
+implementation; the rest is design specs and research. See [`ARCHITECTURE.md`](ARCHITECTURE.md)
+for the canonical pipeline description.
 
-See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the canonical pipeline description
+## What exists today
+
+| | What | Where |
+|---|---|---|
+| ✅ **Runnable** | `groupByTemplate` — Stage 3 (Bookend Merge), groups strings into slotted templates | [`dom-signatures/`](dom-signatures/README.md) |
+| ✅ **Runnable** | Interactive browser demo, 81 real DOM signatures pre-loaded | [`dom-signatures/demo.html`](dom-signatures/demo.html) |
+| 🧪 **Prototype** | Suffix-tree repeat-enumeration engine (validates browser-viability, not the Sequitur path) | [`phase-1-discovery/demos/`](phase-1-discovery/README.md) |
+| 📝 **Spec only** | Tokenize, Sequitur, Selection, Extraction stages | `ARCHITECTURE.md`, `phase-*/` |
+| 📚 **Research** | Distilled LLM research reports + conceptual foundations | [`research/`](research/README.md), `exploration/` |
+
+```bash
+# Try the one working piece in ~5 seconds:
+node dom-signatures/test-signatures.js
+```
+
+There is no end-to-end document → templates pipeline yet. `groupByTemplate` is the only
+production-ready code; it operates on pre-segmented strings (Stage 3), with tokenization
+and grammar induction (Stages 1–2) stubbed by splitting on `.`.
 
 ## Problem
 
@@ -63,7 +82,7 @@ Five stages. See [`ARCHITECTURE.md`](ARCHITECTURE.md) for full detail.
 
 ### Working implementation
 
-[`dom-signatures/`](dom-signatures/README.md) contains the first working implementation of Stage 3 (Bookend Merge), applied to DOM signature strings from a real web UI. Includes an [interactive demo](dom-signatures/demo.html) and a test harness covering 81 signatures. Groups 89-91% of inputs with 100% reconstruction fidelity.
+[`dom-signatures/`](dom-signatures/README.md) contains the first working implementation of Stage 3 (Bookend Merge), applied to DOM signature strings from a real web UI. Includes an [interactive demo](dom-signatures/demo.html) and a test harness covering 81 signatures. Groups 90-91% of inputs with 100% reconstruction fidelity.
 
 ### Earlier phase specs
 
