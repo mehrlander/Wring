@@ -51,15 +51,21 @@ Output:
 
 ## Results on Test Data
 
-81 real DOM signatures from a production web UI:
+81 real DOM signatures from a production web UI (reproduce with `node test-signatures.js`):
 
 | Mode | Grouped | Ungrouped | Groups |
 |------|---------|-----------|--------|
-| Single-slot (`maxSlots=1`) | 72/81 (89%) | 9 | 7 |
-| Multi-slot (`maxSlots=2`) | 74/81 (91%) | 7 | 7 |
-| Specific strategy | 74/81 (91%) | 7 | 19 |
+| Single-slot (`maxSlots=1`) | 73/81 (90%) | 8 | 7 |
+| Multi-slot (`maxSlots=2`) | 73/81 (90%) | 8 | 7 |
+| Specific strategy (`maxSlots=1`) | 74/81 (91%) | 7 | 19 |
 
-Reconstruction fidelity: **100%** across all modes.
+`maxSlots=2` does not increase coverage on this data — it refines *structure* within a
+group (the two `button` signatures gain a second slot) rather than capturing more strings.
+The `specific` strategy trades broad groups for finer-grained templates: more groups, and
+one extra string captured.
+
+Reconstruction fidelity: **100%** — all 146 grouped members across the modes reconstruct
+to their original string exactly (`reconstruct(template, slots) === original`).
 
 ## Files
 
