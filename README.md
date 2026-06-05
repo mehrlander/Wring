@@ -2,28 +2,33 @@
 
 Single-document template induction from internal repetition.
 
-**Status**: Research phase. One of the five pipeline stages — Bookend Merge — has a working
-implementation; the rest is design specs and research. See [`ARCHITECTURE.md`](ARCHITECTURE.md)
-for the canonical pipeline description.
+**Status**: Research phase, with one end-to-end path. The DOM use case runs a real
+document through the pipeline (HTML → templates); the general-text front-end
+(Tokenize → Sequitur) is still design specs and research. See
+[`ARCHITECTURE.md`](ARCHITECTURE.md) for the canonical pipeline description.
 
 ## What exists today
 
 | | What | Where |
 |---|---|---|
-| ✅ **Runnable** | `groupByTemplate` — Stage 3 (Bookend Merge), groups strings into slotted templates | [`dom-signatures/`](dom-signatures/README.md) |
+| ✅ **Runnable** | **End-to-end DOM induction** — raw HTML → signatures → slotted templates | [`dom-signatures/induce-from-html.js`](dom-signatures/induce-from-html.js) |
+| ✅ **Runnable** | `extractSignatures` — DOM segmenter (Stage 1), HTML → `tag#id.class` signatures | [`dom-signatures/extract-signatures.js`](dom-signatures/extract-signatures.js) |
+| ✅ **Runnable** | `groupByTemplate` — Bookend Merge (Stage 3) + greedy MDL selection (Stage 4 slice) | [`dom-signatures/`](dom-signatures/README.md) |
 | ✅ **Runnable** | Interactive browser demo, 81 real DOM signatures pre-loaded | [`dom-signatures/demo.html`](dom-signatures/demo.html) |
 | 🧪 **Prototype** | Suffix-tree repeat-enumeration engine (validates browser-viability, not the Sequitur path) | [`phase-1-discovery/demos/`](phase-1-discovery/README.md) |
-| 📝 **Spec only** | Tokenize, Sequitur, Selection, Extraction stages | `ARCHITECTURE.md`, `phase-*/` |
+| 📝 **Spec only** | General-text Tokenize, Sequitur grammar induction | `ARCHITECTURE.md`, `phase-*/` |
 | 📚 **Research** | Distilled LLM research reports + conceptual foundations | [`research/`](research/README.md), `exploration/` |
 
 ```bash
-# Try the one working piece in ~5 seconds:
-node dom-signatures/test-signatures.js
+# Induce templates from a real HTML document in ~5 seconds:
+node dom-signatures/induce-from-html.js dom-signatures/fixtures/sample.html
 ```
 
-There is no end-to-end document → templates pipeline yet. `groupByTemplate` is the only
-production-ready code; it operates on pre-segmented strings (Stage 3), with tokenization
-and grammar induction (Stages 1–2) stubbed by splitting on `.`.
+The **DOM use case is end-to-end**: a real HTML document flows through segmentation
+(Stage 1), Bookend Merge (Stage 3), greedy MDL selection (a slice of Stage 4), and
+reconstruction (Stage 5). Exact grammar induction (Stage 2) is skipped here because a
+DOM signature is already an atomic unit. A **general-text** pipeline still needs the
+Tokenize → Sequitur front-end before Stage 3 — that's the main remaining gap.
 
 ## Problem
 
@@ -82,7 +87,13 @@ Five stages. See [`ARCHITECTURE.md`](ARCHITECTURE.md) for full detail.
 
 ### Working implementation
 
-[`dom-signatures/`](dom-signatures/README.md) contains the first working implementation of Stage 3 (Bookend Merge), applied to DOM signature strings from a real web UI. Includes an [interactive demo](dom-signatures/demo.html) and a test harness covering 81 signatures. Groups 90-91% of inputs with 100% reconstruction fidelity.
+[`dom-signatures/`](dom-signatures/README.md) runs the DOM use case end-to-end:
+[`extract-signatures.js`](dom-signatures/extract-signatures.js) segments raw HTML into
+signatures (Stage 1), and [`group-by-template.js`](dom-signatures/group-by-template.js)
+merges them into slotted templates (Stage 3) with greedy MDL selection (a slice of
+Stage 4). [`induce-from-html.js`](dom-signatures/induce-from-html.js) wires them
+together; an [interactive demo](dom-signatures/demo.html) and two test harnesses cover
+it. On 81 hand-collected signatures it groups 90–91% with 100% reconstruction fidelity.
 
 ### Earlier phase specs
 

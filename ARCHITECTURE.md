@@ -30,7 +30,7 @@ Segment the document into a symbol stream. This defines the alphabet Sequitur op
 
 Pre-typing (normalizing known field types like dates or IPs before grammar induction) is an optional optimization, not a prerequisite. The mechanism must work without it.
 
-**Status**: Conceptual. No implementation.
+**Status**: One concrete segmenter implemented for the DOM use case — `dom-signatures/extract-signatures.js` turns raw HTML into `tag#id.class.class` signatures. A general-text tokenizer (character / punctuation-aware) is still conceptual.
 
 ---
 
@@ -98,7 +98,7 @@ Concepts that remain valid from the phase specs:
 - **Hierarchy**: templates may nest (a slot value may itself match another template)
 - **Residual diagnosis**: high-entropy residual = satiety; low-entropy residual = latent structure worth revisiting
 
-**Status**: Conceptual. The Phase 4 spec (`phase-4-selection/README.md`) has detailed algorithms for interval scheduling and MDL that apply here without modification.
+**Status**: A working slice exists. `groupByTemplate` (Stage 3) already ranks candidate templates by an MDL-inspired score `(groupSize − 1) × literalChars` and greedily assigns each signature to at most one non-overlapping template — Krimp-style greedy selection at single-document scale. What remains unbuilt is the full cost model (explicit dictionaryCost + dataCost + residualCost) and weighted interval scheduling for templates that compete for the same characters. The Phase 4 spec (`phase-4-selection/README.md`) details those and applies without modification.
 
 ---
 
@@ -106,7 +106,7 @@ Concepts that remain valid from the phase specs:
 
 Map selected templates back to the original document. For each template, produce the list of instances with their slot values as offsets into the source text. Verify reconstruction: concatenating literals and slot values must reproduce the original spans exactly.
 
-**Status**: Conceptual. No implementation.
+**Status**: Reconstruction verification is implemented — `reconstruct(template, slots)` round-trips every grouped member, and the DOM tests assert 100% fidelity. Mapping slot values back to *byte offsets* in the source document (rather than to the signature strings) is not yet built.
 
 ---
 
@@ -114,6 +114,8 @@ Map selected templates back to the original document. For each template, produce
 
 | Component | Evidence |
 |---|---|
+| End-to-end DOM induction (HTML → signatures → templates) | `node dom-signatures/induce-from-html.js dom-signatures/fixtures/sample.html`; tested by `dom-signatures/test-extract.js` |
+| Bookend Merge + greedy MDL selection (Stages 3–4) | `dom-signatures/group-by-template.js`; 90–91% grouped, 100% reconstruction on 81 real signatures |
 | Suffix tree construction (Ukkonen's, SoA layout) | Working prototype: `phase-1-discovery/demos/custom-suffix-tree-engine.html` |
 | Repeat extraction + super-string collapsing | Prototype produces correct results on invoice test data |
 | Character Allocation invariant | Enforced and verified in prototype (symbolStream + residual = full document) |
