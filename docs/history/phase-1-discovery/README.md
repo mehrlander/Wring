@@ -1,6 +1,6 @@
 # Phase 1: Substring Discovery
 
-> **Status: PARTIALLY SUPERSEDED.** The interface contracts, failure modes, and browser considerations remain valid. The algorithm (suffix tree / SA+LCP enumeration) is replaced by Sequitur grammar induction in the current architecture. See [`ARCHITECTURE.md`](../ARCHITECTURE.md).
+> **Status: PARTIALLY SUPERSEDED.** The interface contracts, failure modes, and browser considerations remain valid. The algorithm (suffix tree / SA+LCP enumeration) is replaced by Sequitur grammar induction in the current architecture. See [`ARCHITECTURE.md`](../../../ARCHITECTURE.md).
 
 Enumerate repeated substrings; build the vocabulary that subsequent phases consume.
 

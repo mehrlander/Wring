@@ -56,13 +56,13 @@ the five-stage pipeline now has a working, tested implementation.** See
 |---|---|---|
 | ✅ **Runnable** | **End-to-end general-text induction**: Tokenize, grammar, then group (bookend *or* structural align) | [`general/`](general/README.md) |
 | ✅ **Runnable** | **End-to-end DOM induction**: raw HTML to signatures to slotted templates | [`dom/induce-from-html.js`](dom/induce-from-html.js) |
-| ✅ **Runnable** | Interactive browser demos, one per use case: a [DOM page](dom/demo.html) (signatures or raw HTML) and a [general-text page](general/demo.html) (logs/records) | [`dom/demo.html`](dom/demo.html), [`general/demo.html`](general/demo.html) |
+| ✅ **Runnable** | Interactive browser demos, one per use case: a [DOM page](dom/demo.html) (signatures or raw HTML) and a [general-text page](general/demo.html) (logs/records). All demos are indexed in [`demos/`](demos/README.md). | [`dom/demo.html`](dom/demo.html), [`general/demo.html`](general/demo.html) |
 | ✅ **Runnable** | `tokenize` and `extractSignatures`: segmenters (Stage 1) | [`general/`](general/README.md), [`dom/`](dom/README.md) |
 | ✅ **Runnable** | `induceGrammar`: grammar induction via Re-Pair (Stage 2) | [`general/grammar.js`](general/grammar.js) |
 | ✅ **Runnable** | `groupByTemplate` (literal bookends) and `groupByAlignment` (positional): Stage 3 | [`core/`](core/README.md), [`general/`](general/README.md) |
 | ✅ **Runnable** | `selectTemplates`: MDL plus exact weighted interval scheduling (Stage 4) | [`selection/`](selection/README.md) |
 | 📝 **Spec only** | Online Sequitur (Re-Pair stands in for Stage 2 today) | `ARCHITECTURE.md` |
-| 📚 **Research** | Suffix-tree prototype, LLM research reports, conceptual foundations | `phase-1-discovery/`, [`research/`](research/README.md), `exploration/` |
+| 📚 **Background** | Conceptual foundations, external research reports, and archived prior-architecture specs | [`docs/`](docs/) ([`concepts/`](docs/concepts/), [`research/`](docs/research/README.md), [`history/`](docs/history/README.md)) |
 
 Run the whole test suite (six harnesses, all green):
 
@@ -149,20 +149,20 @@ so the generic algorithm lives in `core/` rather than inside either use case.
 
 ### Earlier phase specs
 
-The `phase-*/` directories contain detailed specs (interfaces, algorithms, failure modes) written before the Sequitur + Bookend Merge pivot. Each has a status header indicating what still applies. They remain useful reference material.
+The `phase-*/` directories under [`docs/history/`](docs/history/README.md) contain detailed specs (interfaces, algorithms, failure modes) written before the Sequitur + Bookend Merge pivot. Each has a status header indicating what still applies. They remain useful reference material; [`docs/history/README.md`](docs/history/README.md) maps their four-phase numbering against the current five-stage pipeline.
 
 | Directory | Status |
 |---|---|
-| [`phase-1-discovery/`](phase-1-discovery/README.md) | Partially superseded (interfaces and failure modes valid; algorithm replaced by Sequitur) |
-| [`phase-2-topology/`](phase-2-topology/README.md) | Superseded (replaced by Bookend Merge) |
-| [`phase-3-refinement/`](phase-3-refinement/README.md) | Partially superseded (alignment and consolidation concepts valid; input interface changed) |
-| [`phase-4-selection/`](phase-4-selection/README.md) | Current (algorithms are path-independent) |
+| [`phase-1-discovery/`](docs/history/phase-1-discovery/README.md) | Partially superseded (interfaces and failure modes valid; algorithm replaced by Sequitur) |
+| [`phase-2-topology/`](docs/history/phase-2-topology/README.md) | Superseded (replaced by Bookend Merge) |
+| [`phase-3-refinement/`](docs/history/phase-3-refinement/README.md) | Partially superseded (alignment and consolidation concepts valid; input interface changed) |
+| [`phase-4-selection/`](docs/history/phase-4-selection/README.md) | Current in content (algorithms are path-independent), archived in form (written in the prior-architecture idiom; the live carriers are ARCHITECTURE.md §4 and `selection/mdl-select.js`) |
 
 ---
 
-## Exploration
+## Concepts
 
-Conceptual foundations and terminology live in `exploration/`:
+Conceptual foundations and terminology live in [`docs/concepts/`](docs/concepts/):
 
 - **Intuition.md**: First-principles observations about template structure
 - **Terms.md**: Vocabulary for matching (seat, bind, register) and emergence (crystallize, induce, distill)

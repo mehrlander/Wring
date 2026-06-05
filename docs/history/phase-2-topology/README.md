@@ -1,6 +1,6 @@
 # Phase 2: Topology
 
-> **Status: SUPERSEDED.** The pairwise gap-variance approach is replaced by Bookend Merge in the current architecture. The decoy problem analysis and distance-decay concepts remain valuable as background. See [`ARCHITECTURE.md`](../ARCHITECTURE.md).
+> **Status: SUPERSEDED.** The pairwise gap-variance approach is replaced by Bookend Merge in the current architecture. The decoy problem analysis and distance-decay concepts remain valuable as background. See [`ARCHITECTURE.md`](../../../ARCHITECTURE.md).
 
 Reduce document to symbol stream; score pairwise consistency; mine anchor chains.
 
