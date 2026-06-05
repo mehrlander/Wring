@@ -114,7 +114,7 @@ would be a different segmenter feeding the same merge.
 | [`fixtures/sample.html`](fixtures/sample.html) | Hand-written HTML fixture with genuine component repetition |
 | [`test-signatures.js`](test-signatures.js) | Node.js test harness with 81 real DOM signatures |
 | [`test-extract.js`](test-extract.js) | Tests for the segmenter and the end-to-end HTML → templates path |
-| [`demo.html`](demo.html) | Interactive browser demo (DaisyUI + Alpine.js) |
+| [`demo.html`](demo.html) | Interactive browser demo (DaisyUI + Alpine.js). Toggle **Signatures / HTML** to paste raw HTML and run Stage 1 extraction + Stage 3 grouping live. |
 
 ## Usage
 
