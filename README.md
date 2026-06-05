@@ -2,47 +2,80 @@
 
 Single-document template induction from internal repetition.
 
-**Status**: Two end-to-end paths run today — a DOM path (HTML → templates) and a
-general-text path (Tokenize → grammar → templates). Every stage of the pipeline now
-has at least a working implementation. See [`ARCHITECTURE.md`](ARCHITECTURE.md) for
-the canonical pipeline description.
+Give Wring **one** document that has repeated structure — a log, an HTML page, any
+text — and it returns the recurring **templates** (fixed boilerplate with variable
+**slots**) plus the values that fill each slot. It is lossless: the templates and
+their slot values reconstruct the original document exactly.
 
-## What exists today
+## What you actually get
+
+**A log file → one template, one slot per field.**
+
+```bash
+node general/induce.js general/fixtures/access.log --group align
+```
+
+```
+in    192.168.1.10 - - [05/Jun/2026:10:00:01 +0000] "GET /api/users/1 HTTP/1.1" 200 1534
+      192.168.1.11 - - [05/Jun/2026:10:00:02 +0000] "GET /api/users/2 HTTP/1.1" 200 1622
+      … 8 lines …
+
+out   192.168.1.${0} - - [05/Jun/2026:10:00:${1} +0000] "${2} /api/${3}/${4} HTTP/1.1" ${5} ${6}
+        ${0} ip   ${1} seconds   ${2} method   ${3} resource   ${4} id   ${5} status   ${6} bytes
+```
+
+The boilerplate collapses into one template and the data falls out as labeled
+columns. (7 of the 8 lines fit this template; the 8th has a different shape and is
+reported separately — Wring doesn't force a bad fit.)
+
+**Raw HTML → the repeated components.**
+
+```bash
+node dom-signatures/induce-from-html.js dom-signatures/fixtures/sample.html
+```
+
+```
+out   div.flex.…rounded-full.h-9.w-9.bg-text-${0}00.text-bg-100      ← avatar      slot = 2,3,4,5
+      h3#_r_${0}.text-[12px].break-words.text-text-100.line-clamp-4   ← list heading slot = the id
+      button.inline-flex.…font-base-bold.rounded-${0}                ← button      slot = md / lg
+```
+
+Same idea on DOM structure: each repeated UI component surfaces as a template, its
+per-instance differences as slots.
+
+**That is the deliverable** — boilerplate separated from data, reversibly.
+Everything below is how it's built and what's still open.
+
+## Status & what exists today
+
+Two paths run end-to-end (text→templates and HTML→templates), and **every stage of
+the five-stage pipeline now has a working, tested implementation.** See
+[`ARCHITECTURE.md`](ARCHITECTURE.md) for the canonical pipeline.
 
 | | What | Where |
 |---|---|---|
+| ✅ **Runnable** | **End-to-end general-text induction** — Tokenize → grammar → group (bookend *or* structural align) | [`general/`](general/README.md) |
 | ✅ **Runnable** | **End-to-end DOM induction** — raw HTML → signatures → slotted templates | [`dom-signatures/induce-from-html.js`](dom-signatures/induce-from-html.js) |
-| ✅ **Runnable** | **End-to-end general-text induction** — Tokenize → grammar (Re-Pair) → Bookend Merge | [`general/induce.js`](general/README.md) |
-| ✅ **Runnable** | `extractSignatures` — DOM segmenter (Stage 1); `tokenize` — general segmenter (Stage 1) | [`dom-signatures/`](dom-signatures/README.md), [`general/`](general/README.md) |
-| ✅ **Runnable** | `induceGrammar` — Stage 2 grammar induction (Re-Pair) | [`general/grammar.js`](general/grammar.js) |
-| ✅ **Runnable** | `groupByTemplate` — Bookend Merge (Stage 3) + greedy MDL selection | [`dom-signatures/`](dom-signatures/README.md) |
-| ✅ **Runnable** | `selectTemplates` — Stage 4 full MDL + exact weighted interval scheduling | [`selection/`](selection/README.md) |
 | ✅ **Runnable** | Interactive browser demo — group signatures, or paste raw HTML (Stage 1 + 3) | [`dom-signatures/demo.html`](dom-signatures/demo.html) |
-| 🧪 **Prototype** | Suffix-tree repeat-enumeration engine (validates browser-viability) | [`phase-1-discovery/demos/`](phase-1-discovery/README.md) |
+| ✅ **Runnable** | `tokenize` / `extractSignatures` — segmenters (Stage 1) | [`general/`](general/README.md), [`dom-signatures/`](dom-signatures/README.md) |
+| ✅ **Runnable** | `induceGrammar` — grammar induction, Re-Pair (Stage 2) | [`general/grammar.js`](general/grammar.js) |
+| ✅ **Runnable** | `groupByTemplate` (literal bookends) / `groupByAlignment` (positional) — Stage 3 | [`dom-signatures/`](dom-signatures/README.md), [`general/`](general/README.md) |
+| ✅ **Runnable** | `selectTemplates` — MDL + exact weighted interval scheduling (Stage 4) | [`selection/`](selection/README.md) |
 | 📝 **Spec only** | Online Sequitur (Re-Pair stands in for Stage 2 today) | `ARCHITECTURE.md` |
-| 📚 **Research** | Distilled LLM research reports + conceptual foundations | [`research/`](research/README.md), `exploration/` |
+| 📚 **Research** | Suffix-tree prototype, LLM research reports, conceptual foundations | `phase-1-discovery/`, [`research/`](research/README.md), `exploration/` |
+
+Run the whole test suite (six harnesses, all green):
 
 ```bash
-# Induce templates from a real HTML document:
-node dom-signatures/induce-from-html.js dom-signatures/fixtures/sample.html
-
-# Induce templates from a log / free text:
-node general/induce.js general/fixtures/access.log --records lines --max-slots 8
+for t in dom-signatures/test-signatures.js dom-signatures/test-extract.js \
+         general/test-grammar.js general/test-induce.js general/test-align.js \
+         selection/test-mdl-select.js; do node "$t" >/dev/null && echo "ok $t"; done
 ```
 
-Both paths reconstruct losslessly. Stage 3 offers two grouping strategies: **Bookend
-Merge** (shared literal prefix/suffix) and **structural alignment** (`--group align`),
-which groups records by positional agreement. On a multi-field log line, bookend
-anchors on an incidental field (the client IP) and fractures the template, while
-alignment recovers a single clean template with one slot per field:
-
-```
-192.168.1.${0} - - [05/Jun/2026:10:00:${1} +0000] "${2} /api/${3}/${4} HTTP/1.1" ${5} ${6}
-```
-
-The remaining frontiers: reconciling records of differing field *count*, discovering
-record boundaries without a delimiter, and the [`selection/`](selection/README.md)
-MDL layer for overlapping candidates. See [`general/README.md`](general/README.md).
+**What's still open** (honest frontiers, not loose ends): reconciling records whose
+field *count* differs; discovering record boundaries with no delimiter; and putting
+the [`selection/`](selection/README.md) MDL layer to work once a generator emits
+overlapping candidates. Full findings in [`general/README.md`](general/README.md).
 
 ## Problem
 
@@ -89,25 +122,26 @@ Prioritize interpretability over maximal compression:
 
 ## Pipeline
 
-Five stages. See [`ARCHITECTURE.md`](ARCHITECTURE.md) for full detail.
+Five stages, and every one has a real implementation today. See
+[`ARCHITECTURE.md`](ARCHITECTURE.md) for full detail.
 
-| Stage | Goal | Key Output |
-|-------|------|------------|
-| Tokenize | Segment document into symbol stream | Token stream (the alphabet for Sequitur) |
-| Sequitur | Find exact repeats; build grammar | Rules: sequences of terminals and rule references |
-| Bookend Merge | Align near-identical rules; discover slots | Slotted templates (literals + variable positions) |
-| Selection | Rank by MDL; resolve overlaps | Non-overlapping template instances + residual |
-| Extraction | Map to source text; verify reconstruction | Instance map with slot values as document offsets |
+| Stage | Goal | Implemented by |
+|-------|------|----------------|
+| Tokenize | Segment the document into a symbol stream | `general/tokenize.js`, `dom-signatures/extract-signatures.js` |
+| Grammar | Find exact repeats; build a grammar | `general/grammar.js` (Re-Pair; ARCHITECTURE names Sequitur) |
+| Bookend Merge | Align near-identical sequences; discover slots | `dom-signatures/group-by-template.js` (literal bookends) · `general/align-group.js` (structural) |
+| Selection | Rank by MDL; resolve overlaps | greedy slice in `group-by-template.js` · full version in `selection/mdl-select.js` |
+| Extraction | Map back to the source; verify reconstruction | reconstruction is verified end-to-end on both paths (lossless) |
 
-### Working implementation
+### Two working pipelines
 
-[`dom-signatures/`](dom-signatures/README.md) runs the DOM use case end-to-end:
-[`extract-signatures.js`](dom-signatures/extract-signatures.js) segments raw HTML into
-signatures (Stage 1), and [`group-by-template.js`](dom-signatures/group-by-template.js)
-merges them into slotted templates (Stage 3) with greedy MDL selection (a slice of
-Stage 4). [`induce-from-html.js`](dom-signatures/induce-from-html.js) wires them
-together; an [interactive demo](dom-signatures/demo.html) and two test harnesses cover
-it. On 81 hand-collected signatures it groups 90–91% with 100% reconstruction fidelity.
+- **General text** ([`general/`](general/README.md)): `tokenize` → `induceGrammar`
+  (Re-Pair) → group by **bookend** or **structural alignment** → reconstruction check.
+  Driver: `general/induce.js`. Best on records with many independent fields (logs).
+- **DOM** ([`dom-signatures/`](dom-signatures/README.md)): `extractSignatures` →
+  `groupByTemplate` (+ greedy MDL selection) → reconstruction check. Driver:
+  `induce-from-html.js`, plus an [interactive demo](dom-signatures/demo.html). On 81
+  hand-collected signatures it groups 90–91% with 100% reconstruction fidelity.
 
 ### Earlier phase specs
 
