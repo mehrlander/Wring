@@ -10,6 +10,10 @@ node general/induce.js general/fixtures/access.log --records lines --max-slots 8
 cat somefile.txt | node general/induce.js --records anchor
 ```
 
+For an interactive version, open [`demo.html`](demo.html) in a browser: paste a log,
+choose the tokenizer, record split, and `align` vs `bookend` grouping, and watch the
+templates (and the reconstruction check) update live.
+
 ## The stages
 
 | Stage | Module | What it does |
@@ -17,7 +21,7 @@ cat somefile.txt | node general/induce.js --records anchor
 | 1. Tokenize | [`tokenize.js`](tokenize.js) | Lossless segmentation (`punct` / `word` / `char` / `line`). `tokens.join('') === text`. |
 | 2. Grammar | [`grammar.js`](grammar.js) | **Re-Pair** grammar induction, producing a hierarchy of *exact* repeats. (See note below.) |
 | Bridge | [`induce.js`](induce.js) | Turns the grammar into "records" (near-repeated spans) and feeds them to Stage 3 at token granularity. |
-| 3-4. Merge + Select | [`../dom-signatures/group-by-template.js`](../dom-signatures/group-by-template.js) | Bookend Merge + greedy MDL selection. |
+| 3-4. Merge + Select | [`../core/group-by-template.js`](../core/group-by-template.js) | Bookend Merge + greedy MDL selection (shared engine). |
 | 5. Reconstruct | `induce.js` | Verifies every grouped record round-trips exactly. |
 
 ### Why Re-Pair instead of Sequitur?
@@ -110,6 +114,7 @@ strategy).
 | [`grammar.js`](grammar.js) | Re-Pair grammar induction (Stage 2) + `expandRule`, `reconstructTokens` |
 | [`align-group.js`](align-group.js) | Structural Stage 3: positional-agreement grouping (`groupByAlignment`) |
 | [`induce.js`](induce.js) | Bridge + end-to-end CLI + `induce(text, options)`; `--group bookend\|align` |
+| [`demo.html`](demo.html) | Interactive browser demo (DaisyUI + Alpine.js): paste a log/records, pick tokenizer + record split + `align`/`bookend`, see templates and the reconstruction check live |
 | [`fixtures/access.log`](fixtures/access.log) | Apache-style log sample with multi-field variation |
 | [`test-grammar.js`](test-grammar.js) | Grammar invariants: reconstruction, no-repeats-remain, rule utility |
 | [`test-induce.js`](test-induce.js) | Tokenizer losslessness + end-to-end reconstruction fidelity |

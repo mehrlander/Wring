@@ -31,7 +31,7 @@
 const fs = require('fs');
 const { tokenize } = require('./tokenize.js');
 const { induceGrammar, expandRule, reconstructTokens } = require('./grammar.js');
-const { groupByTemplate, reconstruct } = require('../dom-signatures/group-by-template.js');
+const { groupByTemplate, reconstruct } = require('../core/group-by-template.js');
 const { groupByAlignment, reconstructAlign } = require('./align-group.js');
 
 // Internal token separator for feeding token arrays to groupByTemplate as

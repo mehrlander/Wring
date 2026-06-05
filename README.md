@@ -31,7 +31,7 @@ Wring reports it separately instead of forcing a bad fit.)
 **Raw HTML → the repeated components.**
 
 ```bash
-node dom-signatures/induce-from-html.js dom-signatures/fixtures/sample.html
+node dom/induce-from-html.js dom/fixtures/sample.html
 ```
 
 ```
@@ -55,11 +55,11 @@ the five-stage pipeline now has a working, tested implementation.** See
 | | What | Where |
 |---|---|---|
 | ✅ **Runnable** | **End-to-end general-text induction**: Tokenize, grammar, then group (bookend *or* structural align) | [`general/`](general/README.md) |
-| ✅ **Runnable** | **End-to-end DOM induction**: raw HTML to signatures to slotted templates | [`dom-signatures/induce-from-html.js`](dom-signatures/induce-from-html.js) |
-| ✅ **Runnable** | Interactive browser demo: group signatures, or paste raw HTML (Stage 1 + 3) | [`dom-signatures/demo.html`](dom-signatures/demo.html) |
-| ✅ **Runnable** | `tokenize` and `extractSignatures`: segmenters (Stage 1) | [`general/`](general/README.md), [`dom-signatures/`](dom-signatures/README.md) |
+| ✅ **Runnable** | **End-to-end DOM induction**: raw HTML to signatures to slotted templates | [`dom/induce-from-html.js`](dom/induce-from-html.js) |
+| ✅ **Runnable** | Interactive browser demos, one per use case: a [DOM page](dom/demo.html) (signatures or raw HTML) and a [general-text page](general/demo.html) (logs/records) | [`dom/demo.html`](dom/demo.html), [`general/demo.html`](general/demo.html) |
+| ✅ **Runnable** | `tokenize` and `extractSignatures`: segmenters (Stage 1) | [`general/`](general/README.md), [`dom/`](dom/README.md) |
 | ✅ **Runnable** | `induceGrammar`: grammar induction via Re-Pair (Stage 2) | [`general/grammar.js`](general/grammar.js) |
-| ✅ **Runnable** | `groupByTemplate` (literal bookends) and `groupByAlignment` (positional): Stage 3 | [`dom-signatures/`](dom-signatures/README.md), [`general/`](general/README.md) |
+| ✅ **Runnable** | `groupByTemplate` (literal bookends) and `groupByAlignment` (positional): Stage 3 | [`core/`](core/README.md), [`general/`](general/README.md) |
 | ✅ **Runnable** | `selectTemplates`: MDL plus exact weighted interval scheduling (Stage 4) | [`selection/`](selection/README.md) |
 | 📝 **Spec only** | Online Sequitur (Re-Pair stands in for Stage 2 today) | `ARCHITECTURE.md` |
 | 📚 **Research** | Suffix-tree prototype, LLM research reports, conceptual foundations | `phase-1-discovery/`, [`research/`](research/README.md), `exploration/` |
@@ -67,7 +67,7 @@ the five-stage pipeline now has a working, tested implementation.** See
 Run the whole test suite (six harnesses, all green):
 
 ```bash
-for t in dom-signatures/test-signatures.js dom-signatures/test-extract.js \
+for t in core/test-group.js dom/test-extract.js \
          general/test-grammar.js general/test-induce.js general/test-align.js \
          selection/test-mdl-select.js; do node "$t" >/dev/null && echo "ok $t"; done
 ```
@@ -127,21 +127,25 @@ Five stages, and every one has a real implementation today. See
 
 | Stage | Goal | Implemented by |
 |-------|------|----------------|
-| Tokenize | Segment the document into a symbol stream | `general/tokenize.js`, `dom-signatures/extract-signatures.js` |
+| Tokenize | Segment the document into a symbol stream | `general/tokenize.js`, `dom/extract-signatures.js` |
 | Grammar | Find exact repeats; build a grammar | `general/grammar.js` (Re-Pair; ARCHITECTURE names Sequitur) |
-| Bookend Merge | Align near-identical sequences; discover slots | `dom-signatures/group-by-template.js` (literal bookends) · `general/align-group.js` (structural) |
-| Selection | Rank by MDL; resolve overlaps | greedy slice in `group-by-template.js` · full version in `selection/mdl-select.js` |
+| Bookend Merge | Align near-identical sequences; discover slots | `core/group-by-template.js` (literal bookends) · `general/align-group.js` (structural) |
+| Selection | Rank by MDL; resolve overlaps | greedy slice in `core/group-by-template.js` · full version in `selection/mdl-select.js` |
 | Extraction | Map back to the source; verify reconstruction | reconstruction is verified end-to-end on both paths (lossless) |
 
 ### Two working pipelines
 
 - **General text** ([`general/`](general/README.md)): `tokenize` → `induceGrammar`
   (Re-Pair) → group by **bookend** or **structural alignment** → reconstruction check.
-  Driver: `general/induce.js`. Best on records with many independent fields (logs).
-- **DOM** ([`dom-signatures/`](dom-signatures/README.md)): `extractSignatures` →
+  Driver: `general/induce.js`, plus an [interactive demo](general/demo.html). Best on
+  records with many independent fields (logs).
+- **DOM** ([`dom/`](dom/README.md)): `extractSignatures` →
   `groupByTemplate` (+ greedy MDL selection) → reconstruction check. Driver:
-  `induce-from-html.js`, plus an [interactive demo](dom-signatures/demo.html). On 81
+  `induce-from-html.js`, plus an [interactive demo](dom/demo.html). On 81
   hand-collected signatures it groups 90-91% with 100% reconstruction fidelity.
+
+Both front-ends share one Stage-3/4 engine, [`core/group-by-template.js`](core/README.md),
+so the generic algorithm lives in `core/` rather than inside either use case.
 
 ### Earlier phase specs
 
