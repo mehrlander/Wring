@@ -32,6 +32,7 @@ const fs = require('fs');
 const { tokenize } = require('./tokenize.js');
 const { induceGrammar, expandRule, reconstructTokens } = require('./grammar.js');
 const { groupByTemplate, reconstruct } = require('../dom-signatures/group-by-template.js');
+const { groupByAlignment, reconstructAlign } = require('./align-group.js');
 
 // Internal token separator for feeding token arrays to groupByTemplate as
 // strings. NUL never appears in normal text (and we strip it from input), so
@@ -95,9 +96,11 @@ function induce(text, options = {}) {
   const {
     tokens: tokMode = 'punct',
     records: recordMode = 'lines',
+    group = 'bookend',   // Stage 3 strategy: 'bookend' (literal anchors) or 'align' (positional)
     maxSlots = 1,
     strategy = 'compress',
     minGroupSize = 2,
+    threshold = 0.5,
   } = options;
 
   const clean = text.split(NUL).join(''); // guarantee NUL is purely a separator
@@ -112,23 +115,35 @@ function induce(text, options = {}) {
     records = recordsByLines(tokens);
   }
 
-  const recordStrings = records.map((r) => r.join(NUL));
-  const result = groupByTemplate(recordStrings, {
-    maxSlots, strategy, minGroupSize, delimiter: NUL,
-  });
-
-  // Stage 5 — record-level reconstruction fidelity.
-  let pass = 0, total = 0;
-  for (const g of result.groups) {
-    for (const m of g.members) {
-      total++;
-      if (reconstruct(g.template, m.slots, NUL) === m.original) pass++;
+  let result, fidelity;
+  if (group === 'align') {
+    // Stage 3 by positional agreement, on token arrays directly.
+    result = groupByAlignment(records, { threshold, minGroupSize });
+    let pass = 0, total = 0;
+    for (const g of result.groups) {
+      for (const m of g.members) {
+        total++;
+        if (reconstructAlign(g.template, m.slots) === m.original) pass++;
+      }
     }
+    fidelity = { pass, total };
+  } else {
+    // Stage 3 by Bookend Merge, on NUL-joined records (token granularity).
+    const recordStrings = records.map((r) => r.join(NUL));
+    result = groupByTemplate(recordStrings, { maxSlots, strategy, minGroupSize, delimiter: NUL });
+    let pass = 0, total = 0;
+    for (const g of result.groups) {
+      for (const m of g.members) {
+        total++;
+        if (reconstruct(g.template, m.slots, NUL) === m.original) pass++;
+      }
+    }
+    fidelity = { pass, total };
   }
 
   return {
-    tokens, grammar, records, result, recordStrings,
-    strategy: usedStrategy, fidelity: { pass, total },
+    tokens, grammar, records, result,
+    strategy: usedStrategy, group, fidelity,
   };
 }
 
@@ -143,7 +158,8 @@ function report(source, run, opts) {
   console.log(`  General Template Induction — ${source}`);
   console.log(line);
   console.log(`\nTokens=${run.tokens.length} · grammar rules=${grammar.rules.size} · ` +
-    `records=${records.length} (${strategy}) · tokenizer=${opts.tokens} · maxSlots=${opts.maxSlots}\n`);
+    `records=${records.length} (${strategy}) · tokenizer=${opts.tokens} · ` +
+    `group=${run.group}${run.group === 'bookend' ? ' maxSlots=' + opts.maxSlots : ''}\n`);
 
   for (let i = 0; i < result.groups.length; i++) {
     const g = result.groups[i];
@@ -179,13 +195,16 @@ function report(source, run, opts) {
 }
 
 function parseArgs(argv) {
-  const o = { file: null, tokens: 'punct', records: 'lines', maxSlots: 1, strategy: 'compress', minGroupSize: 2 };
+  const o = { file: null, tokens: 'punct', records: 'lines', group: 'bookend',
+    maxSlots: 1, strategy: 'compress', minGroupSize: 2, threshold: 0.5 };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--tokens') o.tokens = argv[++i];
     else if (a === '--records') o.records = argv[++i];
+    else if (a === '--group') o.group = argv[++i];
     else if (a === '--max-slots') o.maxSlots = parseInt(argv[++i], 10) || 1;
     else if (a === '--min-group') o.minGroupSize = parseInt(argv[++i], 10) || 2;
+    else if (a === '--threshold') o.threshold = parseFloat(argv[++i]) || 0.5;
     else if (a === '--specific') o.strategy = 'specific';
     else if (!a.startsWith('--')) o.file = a;
   }
@@ -202,7 +221,8 @@ function main() {
   }
   if (!text.trim()) {
     console.error('Usage: node general/induce.js <file> [--tokens punct|word|char] ' +
-      '[--records lines|anchor] [--max-slots N] [--specific] [--min-group N]');
+      '[--records lines|anchor] [--group bookend|align] [--max-slots N] [--threshold F] ' +
+      '[--specific] [--min-group N]');
     console.error('       (or pipe text via stdin)');
     process.exit(1);
   }

@@ -30,12 +30,19 @@ node dom-signatures/induce-from-html.js dom-signatures/fixtures/sample.html
 node general/induce.js general/fixtures/access.log --records lines --max-slots 8
 ```
 
-Both paths reconstruct losslessly. The honest frontier is **template quality on
-multi-field records**: Bookend Merge anchors on the longest shared *literal*, which
-on a log line is an incidental field (the client IP) rather than the structural
-skeleton — so structural, multi-field grouping (a Stage 3 generalization, and the
-[`selection/`](selection/README.md) layer for overlapping candidates) is the next
-quality lever. See [`general/README.md`](general/README.md) for the full findings.
+Both paths reconstruct losslessly. Stage 3 offers two grouping strategies: **Bookend
+Merge** (shared literal prefix/suffix) and **structural alignment** (`--group align`),
+which groups records by positional agreement. On a multi-field log line, bookend
+anchors on an incidental field (the client IP) and fractures the template, while
+alignment recovers a single clean template with one slot per field:
+
+```
+192.168.1.${0} - - [05/Jun/2026:10:00:${1} +0000] "${2} /api/${3}/${4} HTTP/1.1" ${5} ${6}
+```
+
+The remaining frontiers: reconciling records of differing field *count*, discovering
+record boundaries without a delimiter, and the [`selection/`](selection/README.md)
+MDL layer for overlapping candidates. See [`general/README.md`](general/README.md).
 
 ## Problem
 

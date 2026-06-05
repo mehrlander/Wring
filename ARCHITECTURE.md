@@ -75,7 +75,9 @@ Slots are discovered as positions where rule bodies diverge. No pre-declaration 
 | Nested variation? | Varying middle is itself a rule reference — collapse alternatives? |
 | Ambiguous splits? | Multiple valid prefix/suffix decompositions for the same pair. |
 
-**Status**: Algorithm outlined but underspecified. No implementation.
+**Status**: Implemented, in two flavors.
+- **Bookend Merge** (`dom-signatures/group-by-template.js`) — the literal prefix/suffix version above, with optional LCS multi-slot refinement. Strong when records share a long structural literal (DOM signatures).
+- **Structural alignment** (`general/align-group.js`, `--group align`) — buckets records by token count, then clusters by positional agreement; divergent positions become slots. This directly answers the **multi-position variance** question: it recovers one template with a slot per varying field, where Bookend Merge would anchor on an incidental literal (e.g. a client IP) and fracture the template. Demonstrated on `general/fixtures/access.log`. Open: reconciling records whose field *count* differs (different length buckets).
 
 ---
 

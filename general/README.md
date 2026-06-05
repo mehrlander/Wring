@@ -69,9 +69,38 @@ Run on an 8-line Apache-style access log:
 
 **Takeaway:** the missing capability is *structural* grouping — aligning records by
 their shared skeleton (multi-field, order-aware) rather than by the single longest
-literal bookend. That is a Stage-3 generalization (multi-position variance, the
-open question in `ARCHITECTURE.md`), and it is the highest-value next step for
-quality on free text.
+literal bookend.
+
+## Update — structural grouping (`--group align`)
+
+That takeaway is now implemented in [`align-group.js`](align-group.js) and selectable
+with `--group align`. It buckets records by token count, then within a bucket clusters
+by *positional agreement*; positions that disagree become slots (still discovered from
+variance, never declared by type). Adjacent slot positions merge.
+
+The difference on the same 8-line log is stark:
+
+```
+# --group bookend --max-slots 8  →  2 messy templates, split on the client IP,
+#   with boilerplate spilled into slots:
+192.168.1.10 - - [05/Jun/2026:10:00:${0}0000${1}GET${2}api${3}users${4}HTTP${5} ${6} ${7}
+192.168.1.${0}Jun${1}2026${2}10${3}00${4}0000${5}api${6}HTTP${7}
+
+# --group align  →  one clean structural template, fields cleanly separated:
+192.168.1.${0} - - [05/Jun/2026:10:00:${1} +0000] "${2} /api/${3}/${4} HTTP/1.1" ${5} ${6}
+#   slot 0: IP octet   slot 1: seconds   slot 2: method (GET/DELETE)
+#   slot 3: resource   slot 4: id        slot 5: status   slot 6: bytes
+```
+
+```bash
+node general/induce.js general/fixtures/access.log --group align
+```
+
+Honest limits that remain: length bucketing separates records whose field *count*
+differs (the `POST /api/orders` line has a shorter path, so it lands in its own
+bucket and is left ungrouped here). Reconciling records of differing length — and
+discovering the record boundary itself (the `anchor` strategy) — are the next open
+questions.
 
 ## Files
 
@@ -79,12 +108,15 @@ quality on free text.
 |---|---|
 | [`tokenize.js`](tokenize.js) | Lossless tokenizers (Stage 1) |
 | [`grammar.js`](grammar.js) | Re-Pair grammar induction (Stage 2) + `expandRule`, `reconstructTokens` |
-| [`induce.js`](induce.js) | Bridge + end-to-end CLI + `induce(text, options)` |
+| [`align-group.js`](align-group.js) | Structural Stage 3 — positional-agreement grouping (`groupByAlignment`) |
+| [`induce.js`](induce.js) | Bridge + end-to-end CLI + `induce(text, options)`; `--group bookend\|align` |
 | [`fixtures/access.log`](fixtures/access.log) | Apache-style log sample with multi-field variation |
 | [`test-grammar.js`](test-grammar.js) | Grammar invariants: reconstruction, no-repeats-remain, rule utility |
 | [`test-induce.js`](test-induce.js) | Tokenizer losslessness + end-to-end reconstruction fidelity |
+| [`test-align.js`](test-align.js) | Structural grouping: slot discovery, reconstruction, beats bookend on the log |
 
 ```bash
 node general/test-grammar.js
 node general/test-induce.js
+node general/test-align.js
 ```
