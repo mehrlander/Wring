@@ -30,7 +30,7 @@ Segment the document into a symbol stream. This defines the alphabet Sequitur op
 
 Pre-typing (normalizing known field types like dates or IPs before grammar induction) is an optional optimization, not a prerequisite. The mechanism must work without it.
 
-**Status**: One concrete segmenter is implemented for the DOM use case. `dom-signatures/extract-signatures.js` turns raw HTML into `tag#id.class.class` signatures. A general-text tokenizer (character or punctuation-aware) is still conceptual.
+**Status**: One concrete segmenter is implemented for the DOM use case. `dom/extract-signatures.js` turns raw HTML into `tag#id.class.class` signatures. A general-text tokenizer (character or punctuation-aware) is still conceptual.
 
 ---
 
@@ -76,7 +76,7 @@ Slots are discovered as positions where rule bodies diverge. No pre-declaration 
 | Ambiguous splits? | Multiple valid prefix/suffix decompositions for the same pair. |
 
 **Status**: Implemented, in two flavors.
-- **Bookend Merge** (`dom-signatures/group-by-template.js`) is the literal prefix/suffix version above, with optional LCS multi-slot refinement. It is strong when records share a long structural literal, as DOM signatures do.
+- **Bookend Merge** (`core/group-by-template.js`) is the literal prefix/suffix version above, with optional LCS multi-slot refinement. It is strong when records share a long structural literal, as DOM signatures do. It is the shared Stage-3/4 engine that both the DOM and general-text front-ends call.
 - **Structural alignment** (`general/align-group.js`, `--group align`) buckets records by token count, then clusters by positional agreement. Divergent positions become slots. This directly answers the **multi-position variance** question: it recovers one template with a slot per varying field, where Bookend Merge would anchor on an incidental literal such as a client IP and fracture the template. It is demonstrated on `general/fixtures/access.log`. Still open: reconciling records whose field *count* differs, since they fall into different length buckets.
 
 ---
@@ -116,11 +116,11 @@ Map selected templates back to the original document. For each template, produce
 
 | Component | Evidence |
 |---|---|
-| End-to-end DOM induction (HTML → signatures → templates) | `node dom-signatures/induce-from-html.js dom-signatures/fixtures/sample.html`; tested by `dom-signatures/test-extract.js` |
+| End-to-end DOM induction (HTML → signatures → templates) | `node dom/induce-from-html.js dom/fixtures/sample.html`; tested by `dom/test-extract.js` |
 | End-to-end general-text induction (Tokenize → grammar → templates) | `node general/induce.js general/fixtures/access.log`; lossless at every layer, tested by `general/test-induce.js` |
 | Grammar induction (Re-Pair), Stage 2 | `general/grammar.js`; reconstruction + rule-utility invariants in `general/test-grammar.js` |
 | Weighted interval scheduling, Stage 4 | `selection/mdl-select.js`; exact, verified vs brute force over 400 random cases |
-| Bookend Merge + greedy MDL selection (Stages 3-4) | `dom-signatures/group-by-template.js`; 90-91% grouped, 100% reconstruction on 81 real signatures |
+| Bookend Merge + greedy MDL selection (Stages 3-4) | `core/group-by-template.js`; 90-91% grouped, 100% reconstruction on 81 real signatures (`core/test-group.js`) |
 | Suffix tree construction (Ukkonen's, SoA layout) | Working prototype: `phase-1-discovery/demos/custom-suffix-tree-engine.html` |
 | Repeat extraction + super-string collapsing | Prototype produces correct results on invoice test data |
 | Character Allocation invariant | Enforced and verified in prototype (symbolStream + residual = full document) |

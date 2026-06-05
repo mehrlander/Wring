@@ -1,7 +1,7 @@
 /**
  * Test script for the DOM segmenter and the end-to-end HTML → templates path.
  *
- * Usage:  node dom-signatures/test-extract.js
+ * Usage:  node dom/test-extract.js
  *
  * Asserts:
  *   - extractSignatures emits the expected signatures from the fixture
@@ -17,7 +17,7 @@ const {
   extractSignatures,
   countSignatures,
 } = require('./extract-signatures.js');
-const { groupByTemplate, reconstruct } = require('./group-by-template.js');
+const { groupByTemplate, reconstruct } = require('../core/group-by-template.js');
 
 let failures = 0;
 function check(name, cond, detail) {

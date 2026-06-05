@@ -4,12 +4,16 @@
  * Groups strings by discovering shared templates with interpolation slots.
  *
  * Core algorithm: Bookend Merge finds the shared prefix/suffix of token sequences,
- * treat the divergent middle as an interpolation slot. This implements Stage 3
- * of the Wring pipeline (ARCHITECTURE.md) applied to DOM signature strings.
+ * treat the divergent middle as an interpolation slot. This implements Stages 3-4
+ * of the Wring pipeline (ARCHITECTURE.md).
  *
- * A DOM signature is a dot-separated string like "div.flex.items-center.gap-2"
- * representing tag.class1.class2... A template like "div.flex.${0}.gap-2" has
- * one interpolation slot (${0}) capturing the variable portion.
+ * This is the shared, use-case-independent engine: it is pure string-in / string-out
+ * (configurable `delimiter`), so both front-ends call it — the DOM path
+ * (`dom/`) feeds it `tag#id.class.class` signatures, and the general-text path
+ * (`general/`) feeds it NUL-joined token records. A DOM signature is just one
+ * example input: a dot-separated string like "div.flex.items-center.gap-2", which
+ * a template like "div.flex.${0}.gap-2" turns into one slot capturing the
+ * variable portion.
  *
  * The function discovers the best grouping by:
  *   1. Pairwise Bookend Merge to enumerate candidate templates

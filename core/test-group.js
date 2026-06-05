@@ -1,7 +1,9 @@
 /**
- * Test script: runs groupByTemplate against the sample DOM signatures.
+ * Test script: runs groupByTemplate (the shared core engine) against a corpus of
+ * real DOM signature strings. The signatures are just convenient real-world data;
+ * the engine itself is generic string-in / string-out.
  *
- * Usage:  node dom-signatures/test-signatures.js
+ * Usage:  node core/test-group.js
  */
 
 const { groupByTemplate, summarize, reconstruct } = require('./group-by-template.js');

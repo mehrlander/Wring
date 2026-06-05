@@ -5,20 +5,20 @@
  * This is the first piece that runs the Wring pipeline from a real document
  * rather than a hand-collected signature list. It wires the DOM segmenter
  * (Stage 1, extract-signatures.js) to Bookend Merge + greedy MDL selection
- * (Stages 3-4, group-by-template.js).
+ * (Stages 3-4, core/group-by-template.js).
  *
  * Usage:
- *   node dom-signatures/induce-from-html.js [file.html] [--max-slots N] [--dedupe] [--specific]
+ *   node dom/induce-from-html.js [file.html] [--max-slots N] [--dedupe] [--specific]
  *
  * With no file argument, reads HTML from stdin:
- *   curl -s https://example.com | node dom-signatures/induce-from-html.js
+ *   curl -s https://example.com | node dom/induce-from-html.js
  *
  * Output: the induced templates, their slot values, and a compression summary.
  */
 
 const fs = require('fs');
 const { extractSignatures, countSignatures } = require('./extract-signatures.js');
-const { groupByTemplate, summarize, reconstruct } = require('./group-by-template.js');
+const { groupByTemplate, summarize, reconstruct } = require('../core/group-by-template.js');
 
 function parseArgs(argv) {
   const opts = { file: null, maxSlots: 1, dedupe: false, strategy: 'compress' };
@@ -46,7 +46,7 @@ function main() {
   const html = readInput(opts.file);
 
   if (!html.trim()) {
-    console.error('Usage: node dom-signatures/induce-from-html.js [file.html] [--max-slots N] [--dedupe] [--specific]');
+    console.error('Usage: node dom/induce-from-html.js [file.html] [--max-slots N] [--dedupe] [--specific]');
     console.error('       (or pipe HTML via stdin)');
     process.exit(1);
   }
