@@ -3,7 +3,7 @@
  *
  * Stage 1 of the Wring pipeline for general text: segment a document into a
  * token stream that grammar induction (Stage 2) operates on. This defines the
- * alphabet — the granularity at which repeats and slots are discovered.
+ * alphabet, the granularity at which repeats and slots are discovered.
  *
  * Every tokenizer here is LOSSLESS: `tokenize(text, mode).join('') === text`.
  * That property is what lets the pipeline reconstruct the original document
@@ -16,7 +16,7 @@
  * @param {string} text
  * @param {'punct'|'word'|'char'|'line'} [mode='punct']
  *   - 'punct': runs of letters, runs of digits, runs of whitespace, and each
- *     other character individually. Balanced default — fields stay whole, but
+ *     other character individually. Balanced default: fields stay whole, but
  *     punctuation becomes its own boundary. Recommended for logs/structured text.
  *   - 'word':  runs of non-whitespace and runs of whitespace.
  *   - 'char':  every character.

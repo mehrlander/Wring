@@ -1,12 +1,12 @@
 /**
  * mdl-select.js
  *
- * Stage 4 (Selection) of the Wring pipeline — the fuller version.
+ * Stage 4 (Selection) of the Wring pipeline, the fuller version.
  *
  * `groupByTemplate` (Stage 3) already does a greedy MDL slice, but it assigns
  * each *record* to at most one template and assumes records don't overlap. The
- * general problem — especially when candidate templates come from a repeat
- * enumerator and their instances overlap on the same characters — is:
+ * general problem, especially when candidate templates come from a repeat
+ * enumerator and their instances overlap on the same characters, is:
  *
  *   Choose a set of templates and a non-overlapping set of their instances that
  *   MINIMIZES the total description length:
@@ -16,10 +16,10 @@
  *               + residualCost(characters left uncovered)
  *
  * Two ingredients, matching ARCHITECTURE.md:
- *   1. Weighted interval scheduling — exact O(n log n) DP that picks the
+ *   1. Weighted interval scheduling: an exact O(n log n) DP that picks the
  *      max-gain non-overlapping subset of instances. (Verified optimal against
  *      brute force in the tests.)
- *   2. Greedy template inclusion (Krimp-style) — because each template carries a
+ *   2. Greedy template inclusion (Krimp-style), because each template carries a
  *      fixed dictionary cost paid once, the joint problem is NP-hard; we add
  *      templates one at a time, keeping a template only while it lowers total
  *      cost. The scheduling sub-problem inside each step is solved exactly.

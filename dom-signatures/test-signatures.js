@@ -98,7 +98,7 @@ const keyMap = new Map();
 Object.entries(signatures).forEach(([k, v]) => keyMap.set(v, k));
 
 console.log('='.repeat(80));
-console.log('  DOM Signature Grouping — Bookend Merge (maxSlots=1)');
+console.log('  DOM Signature Grouping: Bookend Merge (maxSlots=1)');
 console.log('='.repeat(80));
 console.log(`\nInput: ${strings.length} signatures\n`);
 
@@ -125,7 +125,7 @@ if (result1.ungrouped.length > 0) {
 }
 
 console.log('\n' + '='.repeat(80));
-console.log('  DOM Signature Grouping — Multi-slot (maxSlots=2)');
+console.log('  DOM Signature Grouping: Multi-slot (maxSlots=2)');
 console.log('='.repeat(80));
 console.log();
 
@@ -171,7 +171,7 @@ for (const result of [result1, result2]) {
 }
 console.log(`\n  ${pass} passed, ${fail} failed\n`);
 
-// ─── Strategy: 'specific' — finer-grained sub-groups ────────────────────────
+// ─── Strategy: 'specific', finer-grained sub-groups ─────────────────────────
 
 console.log('='.repeat(80));
 console.log('  Strategy: "specific" (most-specific templates first)');

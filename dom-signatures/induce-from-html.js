@@ -5,7 +5,7 @@
  * This is the first piece that runs the Wring pipeline from a real document
  * rather than a hand-collected signature list. It wires the DOM segmenter
  * (Stage 1, extract-signatures.js) to Bookend Merge + greedy MDL selection
- * (Stages 3–4, group-by-template.js).
+ * (Stages 3-4, group-by-template.js).
  *
  * Usage:
  *   node dom-signatures/induce-from-html.js [file.html] [--max-slots N] [--dedupe] [--specific]
@@ -51,10 +51,10 @@ function main() {
     process.exit(1);
   }
 
-  // Stage 1 — segment the document into signatures.
+  // Stage 1: segment the document into signatures.
   const signatures = extractSignatures(html, { dedupe: opts.dedupe });
 
-  // Stages 3–4 — induce templates and select the best non-overlapping set.
+  // Stages 3-4: induce templates and select the best non-overlapping set.
   const result = groupByTemplate(signatures, {
     maxSlots: opts.maxSlots,
     strategy: opts.strategy,
@@ -62,7 +62,7 @@ function main() {
 
   const source = opts.file || '<stdin>';
   console.log('='.repeat(78));
-  console.log(`  DOM Template Induction — ${source}`);
+  console.log(`  DOM Template Induction: ${source}`);
   console.log('='.repeat(78));
   console.log(`\nExtracted ${signatures.length} signatures` +
     (opts.dedupe ? ' (deduped)' : '') +
@@ -70,7 +70,7 @@ function main() {
 
   console.log(summarize(result));
 
-  // Stage 5 — verify reconstruction fidelity across every grouped member.
+  // Stage 5: verify reconstruction fidelity across every grouped member.
   let pass = 0, fail = 0;
   for (const g of result.groups) {
     for (const m of g.members) {
@@ -94,7 +94,7 @@ function main() {
   console.log(`Compression:    ~${savedChars} literal chars saved of ${rawChars} total ` +
     `(${rawChars ? Math.round((savedChars / rawChars) * 100) : 0}%)`);
 
-  // Surface the most repeated exact signatures — useful structural diagnosis
+  // Surface the most repeated exact signatures, a useful structural diagnosis
   // independent of templating.
   const top = countSignatures(signatures).filter(c => c.count > 1).slice(0, 5);
   if (top.length > 0) {

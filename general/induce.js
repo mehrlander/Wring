@@ -1,10 +1,10 @@
 /**
  * induce.js
  *
- * End-to-end general-text template induction — the full Wring pipeline on an
+ * End-to-end general-text template induction: the full Wring pipeline on an
  * arbitrary document:
  *
- *   Tokenize (Stage 1) → Grammar (Stage 2) → Bookend Merge + MDL (Stages 3–4)
+ *   Tokenize (Stage 1) → Grammar (Stage 2) → Bookend Merge + MDL (Stages 3-4)
  *   → reconstruction check (Stage 5)
  *
  * This is the first time the pipeline runs end-to-end on free text rather than
@@ -13,11 +13,11 @@
  * Bookend Merge at TOKEN granularity, so a slot is a whole field, not a chance
  * run of characters.
  *
- * Two record strategies (the bridge is the open research question — try both):
+ * Two record strategies (the bridge is the open research question, so try both):
  *   - 'lines':  split the token stream on newlines. Robust for logs; the record
  *               boundary is given, the grammar is used only for diagnosis.
  *   - 'anchor': grammar-driven. Split the start rule at its most frequent
- *               repeated rule — the dominant anchor — so the record boundary
+ *               repeated rule, the dominant anchor, so the record boundary
  *               *emerges from repetition* with no delimiter told in advance.
  *
  * Usage:
@@ -155,7 +155,7 @@ function report(source, run, opts) {
   const { grammar, records, result, strategy } = run;
   const line = '='.repeat(78);
   console.log(line);
-  console.log(`  General Template Induction — ${source}`);
+  console.log(`  General Template Induction: ${source}`);
   console.log(line);
   console.log(`\nTokens=${run.tokens.length} · grammar rules=${grammar.rules.size} · ` +
     `records=${records.length} (${strategy}) · tokenizer=${opts.tokens} · ` +

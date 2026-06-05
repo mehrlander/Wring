@@ -15,7 +15,7 @@ const { induceGrammar, reconstructTokens, expandRule } = require('./grammar.js')
 let failures = 0;
 function check(name, cond, detail) {
   if (cond) console.log(`  ✓ ${name}`);
-  else { failures++; console.log(`  ✗ ${name}${detail ? `  — ${detail}` : ''}`); }
+  else { failures++; console.log(`  ✗ ${name}${detail ? `: ${detail}` : ''}`); }
 }
 
 function utilityViolation(g) {

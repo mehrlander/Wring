@@ -1,4 +1,4 @@
-# Stage 4 — Selection (MDL + weighted interval scheduling)
+# Stage 4: Selection (MDL plus weighted interval scheduling)
 
 The fuller version of Stage 4 from [`ARCHITECTURE.md`](../ARCHITECTURE.md).
 `groupByTemplate` already does a greedy MDL slice, but it assigns each *record*
@@ -26,10 +26,10 @@ Each template carries a fixed `dictBytes` cost paid once if it's used at all.
 That shared fixed cost makes the joint "which templates **and** which instances"
 problem NP-hard (a facility-location flavor). So:
 
-- The **instance** sub-problem — given a fixed set of allowed templates, pick the
-  best non-overlapping instances — is solved **exactly** by weighted interval
+- The **instance** sub-problem (given a fixed set of allowed templates, pick the
+  best non-overlapping instances) is solved **exactly** by weighted interval
   scheduling.
-- The **template** sub-problem — which templates to "open" — is solved by a
+- The **template** sub-problem (which templates to "open") is solved by a
   greedy loop that adds the single most cost-reducing template each round and
   stops when none helps. This is the Krimp-style accept-if-it-compresses heuristic
   named in ARCHITECTURE.
@@ -42,8 +42,8 @@ lower total cost wins.
 ## Status / wiring
 
 Standalone and tested; not yet wired into a front-end. It becomes load-bearing
-once a candidate generator produces **overlapping** instances — e.g. a
-suffix-tree / grammar repeat enumerator, or a Stage 3 that proposes competing
+once a candidate generator produces **overlapping** instances, for example a
+suffix-tree or grammar repeat enumerator, or a Stage 3 that proposes competing
 templates over the same regions. The DOM and line-based pipelines produce
 non-overlapping records, where `groupByTemplate`'s simpler greedy already
 suffices, so this is the selection layer the *next* candidate generator will need.

@@ -1,7 +1,7 @@
 /**
  * extract-signatures.js
  *
- * The DOM segmenter — Stage 1 of the Wring pipeline (ARCHITECTURE.md) for the
+ * The DOM segmenter, Stage 1 of the Wring pipeline (ARCHITECTURE.md), for the
  * HTML use case. Turns raw HTML into the dot-delimited `tag#id.class.class`
  * signature strings that groupByTemplate (Stage 3) consumes.
  *

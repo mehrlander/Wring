@@ -12,7 +12,7 @@ const { induce } = require('./induce.js');
 let failures = 0;
 function check(name, cond, detail) {
   if (cond) console.log(`  ✓ ${name}`);
-  else { failures++; console.log(`  ✗ ${name}${detail ? `  — ${detail}` : ''}`); }
+  else { failures++; console.log(`  ✗ ${name}${detail ? `: ${detail}` : ''}`); }
 }
 
 function allReconstruct(result) {
@@ -24,7 +24,7 @@ function allReconstruct(result) {
   return true;
 }
 
-console.log('groupByAlignment — basic slot discovery');
+console.log('groupByAlignment: basic slot discovery');
 {
   const recs = [['a', '1', 'b'], ['a', '2', 'b'], ['a', '3', 'b']];
   const r = groupByAlignment(recs);
@@ -35,7 +35,7 @@ console.log('groupByAlignment — basic slot discovery');
   check('reconstructs exactly', allReconstruct(r));
 }
 
-console.log('\ngroupByAlignment — multiple varying positions');
+console.log('\ngroupByAlignment: multiple varying positions');
 {
   const recs = [
     ['get', ' ', '/a', ' ', '200'],
@@ -48,21 +48,21 @@ console.log('\ngroupByAlignment — multiple varying positions');
   check('reconstructs exactly', allReconstruct(r));
 }
 
-console.log('\ngroupByAlignment — different lengths bucket separately');
+console.log('\ngroupByAlignment: different lengths bucket separately');
 {
   const recs = [['a', 'b'], ['a', 'b'], ['a', 'b', 'c'], ['a', 'b', 'c']];
   const r = groupByAlignment(recs);
   check('two templates (one per length)', r.groups.length === 2, `got ${r.groups.length}`);
 }
 
-console.log('\ngroupByAlignment — dissimilar same-length records do not merge');
+console.log('\ngroupByAlignment: dissimilar same-length records do not merge');
 {
   const recs = [['x', 'y', 'z'], ['p', 'q', 'r']]; // 0% agreement
   const r = groupByAlignment(recs, { threshold: 0.5 });
   check('no group formed below threshold', r.groups.length === 0 && r.ungrouped.length === 2);
 }
 
-console.log('\ngroupByAlignment — adjacent varying positions merge into one slot');
+console.log('\ngroupByAlignment: adjacent varying positions merge into one slot');
 {
   const recs = [['a', '1', '2', 'b'], ['a', '3', '4', 'b']];
   const r = groupByAlignment(recs);
@@ -71,7 +71,7 @@ console.log('\ngroupByAlignment — adjacent varying positions merge into one sl
   check('reconstructs exactly', allReconstruct(r));
 }
 
-console.log('\nintegration — access.log: align beats bookend on structure');
+console.log('\nintegration, access.log: align beats bookend on structure');
 {
   const log = fs.readFileSync(path.join(__dirname, 'fixtures', 'access.log'), 'utf8');
   const align = induce(log, { group: 'align' });

@@ -1,8 +1,8 @@
-# DOM Signature Grouping — Bookend Merge
+# DOM Signature Grouping (Bookend Merge)
 
 First working implementation of Wring's **Stage 3 (Bookend Merge)** algorithm, applied to DOM signature strings.
 
-**[Live Demo](../dom-signatures/demo.html)** — interactive browser tool for exploring the algorithm
+**[Live Demo](../dom-signatures/demo.html)**: an interactive browser tool for exploring the algorithm.
 
 ## What is a DOM Signature?
 
@@ -13,7 +13,7 @@ div.flex.items-center.gap-2.transition.border-t-0.5.border-transparent
 h3#_r_14a_.text-[12px].break-words.text-text-100.line-clamp-4
 ```
 
-These signatures are extracted from real web UIs. Many share a common structure with small variations — exactly the kind of internal repetition Wring is designed to discover.
+These signatures are extracted from real web UIs. Many share a common structure with small variations, which is exactly the kind of internal repetition Wring is designed to discover.
 
 ## How It Works
 
@@ -59,21 +59,21 @@ Output:
 | Multi-slot (`maxSlots=2`) | 73/81 (90%) | 8 | 7 |
 | Specific strategy (`maxSlots=1`) | 74/81 (91%) | 7 | 19 |
 
-`maxSlots=2` does not increase coverage on this data — it refines *structure* within a
+`maxSlots=2` does not increase coverage on this data. Instead it refines *structure* within a
 group (the two `button` signatures gain a second slot) rather than capturing more strings.
 The `specific` strategy trades broad groups for finer-grained templates: more groups, and
 one extra string captured.
 
-Reconstruction fidelity: **100%** — all 146 grouped members across the modes reconstruct
+Reconstruction fidelity is **100%**: all 146 grouped members across the modes reconstruct
 to their original string exactly (`reconstruct(template, slots) === original`).
 
 ## End-to-end: raw HTML → templates
 
 `group-by-template.js` operates on pre-segmented signature strings. The
 [`extract-signatures.js`](extract-signatures.js) **segmenter** closes the loop by
-turning a raw HTML document into those signatures — so you can hand the pipeline a
+turning a raw HTML document into those signatures, so you can hand the pipeline a
 real page instead of a hand-collected list. This is the DOM use case running
-end-to-end (Stage 1 → Stages 3–5) for the first time.
+end-to-end (Stage 1, then Stages 3 to 5) for the first time.
 
 ```bash
 # Induce templates from an HTML file…
@@ -88,7 +88,7 @@ import { extractSignatures } from './extract-signatures.js';
 import { groupByTemplate, summarize } from './group-by-template.js';
 
 const signatures = extractSignatures(htmlString);   // Stage 1 (DOM segmenter)
-const result = groupByTemplate(signatures);          // Stages 3–4
+const result = groupByTemplate(signatures);          // Stages 3-4
 console.log(summarize(result));                       // induced templates + slots
 ```
 
@@ -101,16 +101,16 @@ dropped. `--dedupe` collapses identical signatures; `countSignatures` tallies th
 most-repeated structures.
 
 The DOM segmenter is *one* concrete Stage-1 implementation. Any function producing
-`string[]` can feed Stage 3 — a future general-text front-end (Tokenize → Sequitur)
+`string[]` can feed Stage 3. A future general-text front-end (Tokenize, then Sequitur)
 would be a different segmenter feeding the same merge.
 
 ## Files
 
 | File | Description |
 |------|-------------|
-| [`group-by-template.js`](group-by-template.js) | Core algorithm — `groupByTemplate`, `summarize`, `reconstruct` |
-| [`extract-signatures.js`](extract-signatures.js) | DOM segmenter (Stage 1) — `extractSignatures`, `extractSignaturesFromNodes`, `countSignatures` |
-| [`induce-from-html.js`](induce-from-html.js) | End-to-end CLI — HTML file or stdin → induced templates + compression summary |
+| [`group-by-template.js`](group-by-template.js) | Core algorithm: `groupByTemplate`, `summarize`, `reconstruct` |
+| [`extract-signatures.js`](extract-signatures.js) | DOM segmenter (Stage 1): `extractSignatures`, `extractSignaturesFromNodes`, `countSignatures` |
+| [`induce-from-html.js`](induce-from-html.js) | End-to-end CLI: HTML file or stdin to induced templates plus a compression summary |
 | [`fixtures/sample.html`](fixtures/sample.html) | Hand-written HTML fixture with genuine component repetition |
 | [`test-signatures.js`](test-signatures.js) | Node.js test harness with 81 real DOM signatures |
 | [`test-extract.js`](test-extract.js) | Tests for the segmenter and the end-to-end HTML → templates path |
@@ -158,11 +158,11 @@ node dom-signatures/test-extract.js      # DOM segmenter + end-to-end HTML path
 
 This directory implements multiple stages from [`ARCHITECTURE.md`](../ARCHITECTURE.md) for the DOM use case. The full Wring pipeline is:
 
-1. **Tokenize** — segment document into symbol stream — *`extract-signatures.js` (DOM segmenter)*
-2. **Sequitur** — grammar induction to find exact repeats — *not yet built; the DOM path skips it*
-3. **Bookend Merge** — align near-identical rules into slotted templates — *`group-by-template.js`*
-4. **Selection** — rank by MDL, resolve overlapping candidates — *greedy MDL slice inside `group-by-template.js`*
-5. **Extraction** — map templates back to source text; verify reconstruction — *`reconstruct` + fidelity checks*
+1. **Tokenize**: segment the document into a symbol stream. Done by `extract-signatures.js` (the DOM segmenter).
+2. **Sequitur**: grammar induction to find exact repeats. Not yet built; the DOM path skips it.
+3. **Bookend Merge**: align near-identical rules into slotted templates. Done by `group-by-template.js`.
+4. **Selection**: rank by MDL and resolve overlapping candidates. A greedy MDL slice lives inside `group-by-template.js`.
+5. **Extraction**: map templates back to source text and verify reconstruction. Done by `reconstruct` plus the fidelity checks.
 
 For DOM signatures, exact grammar induction (Stage 2) is unnecessary: an element's
 signature is already an atomic unit, so the segmenter feeds Bookend Merge directly.

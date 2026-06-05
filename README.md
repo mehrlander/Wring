@@ -2,8 +2,8 @@
 
 Single-document template induction from internal repetition.
 
-Give Wring **one** document that has repeated structure — a log, an HTML page, any
-text — and it returns the recurring **templates** (fixed boilerplate with variable
+Give Wring **one** document that has repeated structure, such as a log or an HTML
+page, and it returns the recurring **templates** (fixed boilerplate with variable
 **slots**) plus the values that fill each slot. It is lossless: the templates and
 their slot values reconstruct the original document exactly.
 
@@ -25,8 +25,8 @@ out   192.168.1.${0} - - [05/Jun/2026:10:00:${1} +0000] "${2} /api/${3}/${4} HTT
 ```
 
 The boilerplate collapses into one template and the data falls out as labeled
-columns. (7 of the 8 lines fit this template; the 8th has a different shape and is
-reported separately — Wring doesn't force a bad fit.)
+columns. (7 of the 8 lines fit this template. The 8th has a different shape, so
+Wring reports it separately instead of forcing a bad fit.)
 
 **Raw HTML → the repeated components.**
 
@@ -43,8 +43,8 @@ out   div.flex.…rounded-full.h-9.w-9.bg-text-${0}00.text-bg-100      ← avata
 Same idea on DOM structure: each repeated UI component surfaces as a template, its
 per-instance differences as slots.
 
-**That is the deliverable** — boilerplate separated from data, reversibly.
-Everything below is how it's built and what's still open.
+**That is the deliverable.** Boilerplate is separated from data, and the split
+reverses exactly. Everything below is how it is built and what is still open.
 
 ## Status & what exists today
 
@@ -54,13 +54,13 @@ the five-stage pipeline now has a working, tested implementation.** See
 
 | | What | Where |
 |---|---|---|
-| ✅ **Runnable** | **End-to-end general-text induction** — Tokenize → grammar → group (bookend *or* structural align) | [`general/`](general/README.md) |
-| ✅ **Runnable** | **End-to-end DOM induction** — raw HTML → signatures → slotted templates | [`dom-signatures/induce-from-html.js`](dom-signatures/induce-from-html.js) |
-| ✅ **Runnable** | Interactive browser demo — group signatures, or paste raw HTML (Stage 1 + 3) | [`dom-signatures/demo.html`](dom-signatures/demo.html) |
-| ✅ **Runnable** | `tokenize` / `extractSignatures` — segmenters (Stage 1) | [`general/`](general/README.md), [`dom-signatures/`](dom-signatures/README.md) |
-| ✅ **Runnable** | `induceGrammar` — grammar induction, Re-Pair (Stage 2) | [`general/grammar.js`](general/grammar.js) |
-| ✅ **Runnable** | `groupByTemplate` (literal bookends) / `groupByAlignment` (positional) — Stage 3 | [`dom-signatures/`](dom-signatures/README.md), [`general/`](general/README.md) |
-| ✅ **Runnable** | `selectTemplates` — MDL + exact weighted interval scheduling (Stage 4) | [`selection/`](selection/README.md) |
+| ✅ **Runnable** | **End-to-end general-text induction**: Tokenize, grammar, then group (bookend *or* structural align) | [`general/`](general/README.md) |
+| ✅ **Runnable** | **End-to-end DOM induction**: raw HTML to signatures to slotted templates | [`dom-signatures/induce-from-html.js`](dom-signatures/induce-from-html.js) |
+| ✅ **Runnable** | Interactive browser demo: group signatures, or paste raw HTML (Stage 1 + 3) | [`dom-signatures/demo.html`](dom-signatures/demo.html) |
+| ✅ **Runnable** | `tokenize` and `extractSignatures`: segmenters (Stage 1) | [`general/`](general/README.md), [`dom-signatures/`](dom-signatures/README.md) |
+| ✅ **Runnable** | `induceGrammar`: grammar induction via Re-Pair (Stage 2) | [`general/grammar.js`](general/grammar.js) |
+| ✅ **Runnable** | `groupByTemplate` (literal bookends) and `groupByAlignment` (positional): Stage 3 | [`dom-signatures/`](dom-signatures/README.md), [`general/`](general/README.md) |
+| ✅ **Runnable** | `selectTemplates`: MDL plus exact weighted interval scheduling (Stage 4) | [`selection/`](selection/README.md) |
 | 📝 **Spec only** | Online Sequitur (Re-Pair stands in for Stage 2 today) | `ARCHITECTURE.md` |
 | 📚 **Research** | Suffix-tree prototype, LLM research reports, conceptual foundations | `phase-1-discovery/`, [`research/`](research/README.md), `exploration/` |
 
@@ -104,10 +104,10 @@ Prioritize interpretability over maximal compression:
 
 ## Core Objectives
 
- * **Character Allocation**: Every character—including whitespace—is allocated to one of three primitive types: Literals, Slots, or Whitespace. Un-patterned text is designated as Residual.
+ * **Character Allocation**: Every character, including whitespace, is allocated to one of three primitive types: Literals, Slots, or Whitespace. Un-patterned text is designated as Residual.
  * **Reconstruction Fidelity**: The default model aims for exact reproduction. By treating Whitespace as a distinct primitive, the system can optionally expunge "formatting noise" for readability, acknowledging the trade-off.
  * **Structural Separation**: The system decomposes the document into recurring structural patterns (templates) and their specific occurrences (instances), separating boilerplate from variable content.
- * **Browser-First Performance**: Discovery and indexing logic is optimized for browser memory and execution limits (~100KB–10MB range), utilizing WASM for high-density indexing where necessary.
+ * **Browser-First Performance**: Discovery and indexing logic is optimized for browser memory and execution limits (~100KB-10MB range), utilizing WASM for high-density indexing where necessary.
 
 ## Key Assumptions
 
@@ -141,7 +141,7 @@ Five stages, and every one has a real implementation today. See
 - **DOM** ([`dom-signatures/`](dom-signatures/README.md)): `extractSignatures` →
   `groupByTemplate` (+ greedy MDL selection) → reconstruction check. Driver:
   `induce-from-html.js`, plus an [interactive demo](dom-signatures/demo.html). On 81
-  hand-collected signatures it groups 90–91% with 100% reconstruction fidelity.
+  hand-collected signatures it groups 90-91% with 100% reconstruction fidelity.
 
 ### Earlier phase specs
 

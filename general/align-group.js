@@ -4,22 +4,22 @@
  * A structural alternative to Bookend Merge for Stage 3.
  *
  * Bookend Merge (`group-by-template.js`) groups records by their longest shared
- * literal prefix/suffix. On records with many independent variable fields — a
- * log line, say — the longest shared literal is an *incidental* field (the
+ * literal prefix/suffix. On records with many independent variable fields, such as a
+ * log line, the longest shared literal is an *incidental* field (the
  * client IP), so records that merely share an IP get grouped while the real
  * template fractures. See `general/README.md` for that finding.
  *
  * This module groups by *positional agreement* instead, the idea behind log
  * template miners (Drain / LogMine):
  *
- *   1. Bucket records by token count — different field structures usually differ
+ *   1. Bucket records by token count. Different field structures usually differ
  *      in length, so this cheaply separates unrelated formats.
  *   2. Within a bucket, sequentially assign each record to a template it agrees
  *      with on ≥ `threshold` of positions. When a record joins, positions where
  *      it disagrees with the template become slots.
  *   3. Adjacent slot positions merge into one slot.
  *
- * Slots are still discovered purely from observed variance — no token is
+ * Slots are still discovered purely from observed variance. No token is
  * declared "variable" by type. The result is one template with many field slots
  * rather than many templates split on an incidental literal.
  *

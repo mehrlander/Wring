@@ -25,13 +25,13 @@ function check(name, cond, detail) {
     console.log(`  ✓ ${name}`);
   } else {
     failures++;
-    console.log(`  ✗ ${name}${detail ? `  — ${detail}` : ''}`);
+    console.log(`  ✗ ${name}${detail ? `: ${detail}` : ''}`);
   }
 }
 
 const html = fs.readFileSync(path.join(__dirname, 'fixtures', 'sample.html'), 'utf8');
 
-console.log('extractSignatures — fixture');
+console.log('extractSignatures: fixture');
 const sigs = extractSignatures(html);
 check('extracts 27 signatures', sigs.length === 27, `got ${sigs.length}`);
 check('skips <style> content (no .ignored class)',
@@ -46,7 +46,7 @@ check('preserves class source order',
   sigs.includes('a.flex.items-center.gap-2.px-2.py-2.rounded-lg.hover:bg-bg-200'));
 check('lowercases tag names', sigs.every(s => /^[a-z]/.test(s)));
 
-console.log('\nextractSignatures — options');
+console.log('\nextractSignatures: options');
 const bare = extractSignatures('<div></div><span class="x"></span>');
 check('requireClassOrId drops bare <div>', bare.length === 1 && bare[0] === 'span.x');
 const withBare = extractSignatures('<div></div><span class="x"></span>', { requireClassOrId: false });

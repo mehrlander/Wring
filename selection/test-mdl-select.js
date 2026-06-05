@@ -14,7 +14,7 @@ const { weightedIntervalSchedule, mdlCost, selectTemplates } = require('./mdl-se
 let failures = 0;
 function check(name, cond, detail) {
   if (cond) console.log(`  ✓ ${name}`);
-  else { failures++; console.log(`  ✗ ${name}${detail ? `  — ${detail}` : ''}`); }
+  else { failures++; console.log(`  ✗ ${name}${detail ? `: ${detail}` : ''}`); }
 }
 
 // Brute-force max-weight non-overlapping subset (for n ≤ ~16).
@@ -33,7 +33,7 @@ function bruteForce(intervals) {
   return best;
 }
 
-console.log('weightedIntervalSchedule — optimality vs brute force');
+console.log('weightedIntervalSchedule: optimality vs brute force');
 let mismatches = 0;
 const rng = (() => { let s = 12345; return () => (s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff; })();
 for (let trial = 0; trial < 400; trial++) {
@@ -50,7 +50,7 @@ for (let trial = 0; trial < 400; trial++) {
 }
 check('400 random cases match brute force', mismatches === 0, `${mismatches} mismatched`);
 
-console.log('\nweightedIntervalSchedule — selected set is non-overlapping');
+console.log('\nweightedIntervalSchedule: selected set is non-overlapping');
 {
   const intervals = [
     { start: 0, end: 5, weight: 10 }, { start: 3, end: 8, weight: 8 },
@@ -62,7 +62,7 @@ console.log('\nweightedIntervalSchedule — selected set is non-overlapping');
   check('no overlaps in result', ok);
 }
 
-console.log('\nselectTemplates — MDL behavior');
+console.log('\nselectTemplates: MDL behavior');
 {
   // A template that clearly pays for itself: 4 instances, each saves a lot.
   const templates = [{ id: 'A', dictBytes: 10 }];
