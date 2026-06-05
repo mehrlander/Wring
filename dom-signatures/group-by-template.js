@@ -3,7 +3,7 @@
  *
  * Groups strings by discovering shared templates with interpolation slots.
  *
- * Core algorithm: Bookend Merge — find shared prefix/suffix of token sequences,
+ * Core algorithm: Bookend Merge finds the shared prefix/suffix of token sequences,
  * treat the divergent middle as an interpolation slot. This implements Stage 3
  * of the Wring pipeline (ARCHITECTURE.md) applied to DOM signature strings.
  *
@@ -91,7 +91,7 @@ export function groupByTemplate(strings, options = {}) {
     ranked.sort((a, b) => b.score - a.score);
   }
 
-  // Phase 4: Greedy assignment — most valuable template first
+  // Phase 4: Greedy assignment, most valuable template first
   const assigned = new Set();
   const groups = [];
 
@@ -407,7 +407,7 @@ function refineMultiSlot(group, maxSlots, delimiter) {
   const alignments = [];
   for (let i = 0; i < segArrays.length; i++) {
     const aligned = alignToAnchors(segArrays[i], anchors);
-    if (!aligned) return; // alignment failed — abort refinement
+    if (!aligned) return; // alignment failed, abort refinement
     alignments.push(aligned);
   }
 
@@ -512,7 +512,7 @@ function alignToAnchors(segs, anchors) {
 
   for (const anchor of anchors) {
     const pos = segs.indexOf(anchor, searchFrom);
-    if (pos === -1) return null; // anchor not found — alignment fails
+    if (pos === -1) return null; // anchor not found, alignment fails
     gaps.push(segs.slice(searchFrom, pos));
     searchFrom = pos + 1;
   }

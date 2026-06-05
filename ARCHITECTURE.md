@@ -30,7 +30,7 @@ Segment the document into a symbol stream. This defines the alphabet Sequitur op
 
 Pre-typing (normalizing known field types like dates or IPs before grammar induction) is an optional optimization, not a prerequisite. The mechanism must work without it.
 
-**Status**: Conceptual. No implementation.
+**Status**: One concrete segmenter is implemented for the DOM use case. `dom-signatures/extract-signatures.js` turns raw HTML into `tag#id.class.class` signatures. A general-text tokenizer (character or punctuation-aware) is still conceptual.
 
 ---
 
@@ -39,11 +39,11 @@ Pre-typing (normalizing known field types like dates or IPs before grammar induc
 Run Sequitur on the token stream. Sequitur replaces repeated digrams with grammar rules, building a hierarchy of exact repeats in linear time.
 
 **Input**: Token stream.
-**Output**: A grammar — rules whose right-hand sides are sequences of terminals and rule references.
+**Output**: A grammar. Its rules have right-hand sides that are sequences of terminals and rule references.
 
 Sequitur finds exact repeats only. If two sequences differ at any position, no rule is formed. This is the gap that Stage 3 addresses.
 
-**Status**: Conceptual. No implementation. (The suffix tree prototype in `phase-1-discovery/demos/` validated that repeat enumeration works in the browser at O(n), but it implements a different algorithm — suffix tree traversal, not Sequitur.)
+**Status**: Implemented via **Re-Pair** (`general/grammar.js`), behind a neutral `{ start, rules, ruleUses }` grammar interface. Re-Pair is an offline member of the same grammar-induction family: it greedily replaces the globally most-frequent digram and produces the same hierarchy of exact repeats Stage 3 needs. Online Sequitur can be dropped in behind the same interface later (an initial Sequitur attempt was abandoned because its incremental pointer surgery was fragile, and correctness of Stage 2 matters more than which family member provides it). The suffix tree prototype in `phase-1-discovery/demos/` separately validated O(n) repeat enumeration in the browser.
 
 ---
 
@@ -71,11 +71,13 @@ Slots are discovered as positions where rule bodies diverge. No pre-declaration 
 |---|---|
 | Which rules to compare? | All pairs is O(n^2). Need clustering or indexing by prefix/suffix hash. |
 | Minimum bookend length? | Too short = coincidental. Too long = misses patterns. |
-| Multi-position variance? | Two positions differ — one compound slot or two? |
-| Nested variation? | Varying middle is itself a rule reference — collapse alternatives? |
+| Multi-position variance? | When two positions differ, is that one compound slot or two? |
+| Nested variation? | When the varying middle is itself a rule reference, should alternatives collapse? |
 | Ambiguous splits? | Multiple valid prefix/suffix decompositions for the same pair. |
 
-**Status**: Algorithm outlined but underspecified. No implementation.
+**Status**: Implemented, in two flavors.
+- **Bookend Merge** (`dom-signatures/group-by-template.js`) is the literal prefix/suffix version above, with optional LCS multi-slot refinement. It is strong when records share a long structural literal, as DOM signatures do.
+- **Structural alignment** (`general/align-group.js`, `--group align`) buckets records by token count, then clusters by positional agreement. Divergent positions become slots. This directly answers the **multi-position variance** question: it recovers one template with a slot per varying field, where Bookend Merge would anchor on an incidental literal such as a client IP and fracture the template. It is demonstrated on `general/fixtures/access.log`. Still open: reconciling records whose field *count* differs, since they fall into different length buckets.
 
 ---
 
@@ -98,7 +100,7 @@ Concepts that remain valid from the phase specs:
 - **Hierarchy**: templates may nest (a slot value may itself match another template)
 - **Residual diagnosis**: high-entropy residual = satiety; low-entropy residual = latent structure worth revisiting
 
-**Status**: Conceptual. The Phase 4 spec (`phase-4-selection/README.md`) has detailed algorithms for interval scheduling and MDL that apply here without modification.
+**Status**: Built at two levels. `groupByTemplate` (Stage 3) contains a greedy MDL slice that assigns each *record* to at most one template. The fuller version lives in `selection/mdl-select.js`: an explicit MDL cost model (dictionaryCost + dataCost + residualCost) plus **exact weighted interval scheduling** (O(n log n) DP, verified optimal against brute force) for candidate templates whose instances overlap on the same characters, wrapped in Krimp-style greedy template inclusion. It is standalone today and becomes load-bearing once a candidate generator emits overlapping instances. The Phase 4 spec (`phase-4-selection/README.md`) applies without modification.
 
 ---
 
@@ -106,7 +108,7 @@ Concepts that remain valid from the phase specs:
 
 Map selected templates back to the original document. For each template, produce the list of instances with their slot values as offsets into the source text. Verify reconstruction: concatenating literals and slot values must reproduce the original spans exactly.
 
-**Status**: Conceptual. No implementation.
+**Status**: Reconstruction verification is implemented. `reconstruct(template, slots)` round-trips every grouped member, and the DOM tests assert 100% fidelity. Mapping slot values back to *byte offsets* in the source document, rather than to the signature strings, is not yet built.
 
 ---
 
@@ -114,6 +116,11 @@ Map selected templates back to the original document. For each template, produce
 
 | Component | Evidence |
 |---|---|
+| End-to-end DOM induction (HTML → signatures → templates) | `node dom-signatures/induce-from-html.js dom-signatures/fixtures/sample.html`; tested by `dom-signatures/test-extract.js` |
+| End-to-end general-text induction (Tokenize → grammar → templates) | `node general/induce.js general/fixtures/access.log`; lossless at every layer, tested by `general/test-induce.js` |
+| Grammar induction (Re-Pair), Stage 2 | `general/grammar.js`; reconstruction + rule-utility invariants in `general/test-grammar.js` |
+| Weighted interval scheduling, Stage 4 | `selection/mdl-select.js`; exact, verified vs brute force over 400 random cases |
+| Bookend Merge + greedy MDL selection (Stages 3-4) | `dom-signatures/group-by-template.js`; 90-91% grouped, 100% reconstruction on 81 real signatures |
 | Suffix tree construction (Ukkonen's, SoA layout) | Working prototype: `phase-1-discovery/demos/custom-suffix-tree-engine.html` |
 | Repeat extraction + super-string collapsing | Prototype produces correct results on invoice test data |
 | Character Allocation invariant | Enforced and verified in prototype (symbolStream + residual = full document) |
@@ -154,7 +161,7 @@ Both paths address the same core challenge: distinguishing structural anchors fr
 - **Old path**: Score symbol pairs by gap-variance. Low variance = structural, high variance = noise.
 - **New path**: Sequitur only forms rules from exact repeats. Decoys that appear at inconsistent positions never become rules. Bookend Merge then handles near-repeats structurally.
 
-The old path's insight (consistency of distance) may still be useful as a ranking signal within the new path — for example, scoring merge candidates by how consistently their instances are spaced. But it is no longer the primary discrimination mechanism.
+The old path's insight (consistency of distance) may still be useful as a ranking signal within the new path. For example, it could score merge candidates by how consistently their instances are spaced. But it is no longer the primary discrimination mechanism.
 
 ---
 
@@ -162,7 +169,7 @@ The old path's insight (consistency of distance) may still be useful as a rankin
 
 These hold across both paths and are non-negotiable:
 
-1. **Character Allocation**: Every character in the document is accounted for — either within a template instance or in residual. No gaps, no overlaps.
+1. **Character Allocation**: Every character in the document is accounted for, either within a template instance or in residual. No gaps, no overlaps.
 2. **Reconstruction Fidelity**: Concatenating a template's literals with an instance's slot values reproduces the original span exactly.
 3. **Slots as Sets**: A slot is defined by its observed values, not a declared type. Typing is optional post-hoc characterization.
 
@@ -172,6 +179,6 @@ These hold across both paths and are non-negotiable:
 
 These documents remain current and are not affected by the algorithmic pivot:
 
-- `exploration/Intuition.md` — First-principles observations about template structure
-- `exploration/Terms.md` — Vocabulary for matching and emergence
-- `exploration/Order.md` — The decoy problem and distance-based discrimination (still valid as a concept; implementation path changed)
+- `exploration/Intuition.md`: first-principles observations about template structure
+- `exploration/Terms.md`: vocabulary for matching and emergence
+- `exploration/Order.md`: the decoy problem and distance-based discrimination (still valid as a concept; the implementation path changed)

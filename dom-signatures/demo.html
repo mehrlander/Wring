@@ -8,7 +8,8 @@
     <script src="https://cdn.jsdelivr.net/combine/npm/@tailwindcss/browser@4,npm/@phosphor-icons/web"></script>
     <script type="module">
       import { groupByTemplate, summarize, reconstruct } from './group-by-template.js';
-      window._gbt = { groupByTemplate, summarize, reconstruct };
+      import { extractSignaturesFromNodes } from './extract-signatures.js';
+      window._gbt = { groupByTemplate, summarize, reconstruct, extractSignaturesFromNodes };
     </script>
     <script defer src="https://unpkg.com/alpinejs"></script>
 </head>
@@ -24,7 +25,7 @@
                 <h1 class="text-lg font-black tracking-tight uppercase italic text-slate-700">
                     Wring — Bookend Merge
                 </h1>
-                <span class="badge badge-sm badge-ghost font-mono">Stage 3</span>
+                <span class="badge badge-sm badge-ghost font-mono">Stage 1 + 3</span>
             </div>
             <button @click="inputExpanded = !inputExpanded" class="btn btn-xs btn-ghost gap-1">
                 <i class="ph" :class="inputExpanded ? 'ph-caret-up' : 'ph-caret-down'"></i>
@@ -34,14 +35,30 @@
 
         <!-- ── Collapsible Input ──────────────────────────────────────────── -->
         <div x-show="inputExpanded" x-transition class="space-y-2">
+            <!-- Input mode toggle: pre-segmented strings vs. raw HTML (Stage 1) -->
+            <div class="flex items-center gap-1">
+                <span class="text-[10px] font-bold uppercase tracking-widest text-base-content/50 mr-1">Input</span>
+                <div class="join">
+                    <button class="btn btn-xs join-item" :class="inputMode === 'strings' ? 'btn-primary' : 'btn-ghost'"
+                            @click="inputMode = 'strings'">Signatures</button>
+                    <button class="btn btn-xs join-item" :class="inputMode === 'html' ? 'btn-primary' : 'btn-ghost'"
+                            @click="inputMode = 'html'">HTML</button>
+                </div>
+                <span class="text-[9px] font-mono text-base-content/40 ml-2"
+                      x-text="inputMode === 'html' ? 'raw HTML → extract signatures (Stage 1) → group (Stage 3)' : 'one signature per line → group (Stage 3)'"></span>
+            </div>
             <textarea
                 x-model="inputText"
                 class="textarea textarea-bordered w-full font-mono text-[10px] leading-tight h-48 shadow-inner"
-                placeholder="Paste strings here, one per line…"
+                :placeholder="inputMode === 'html' ? 'Paste raw HTML here…' : 'Paste strings here, one per line…'"
             ></textarea>
             <div class="flex items-center justify-between">
-                <span class="text-[10px] font-mono text-base-content/50" x-text="inputText.trim().split('\\n').filter(Boolean).length + ' strings'"></span>
-                <button @click="loadDefaults()" class="btn btn-xs btn-ghost">Reset to defaults</button>
+                <span class="text-[10px] font-mono text-base-content/50"
+                      x-text="inputMode === 'html' ? 'HTML input' : inputText.trim().split('\\n').filter(Boolean).length + ' strings'"></span>
+                <div class="flex items-center gap-1">
+                    <button x-show="inputMode === 'html'" @click="loadHtmlSample()" class="btn btn-xs btn-ghost">Load HTML sample</button>
+                    <button @click="loadDefaults()" class="btn btn-xs btn-ghost">Reset to defaults</button>
+                </div>
             </div>
         </div>
 
@@ -280,10 +297,36 @@ span.w-full.text-start.block.truncate
 span.w-full.truncate.text-xs.text-text-500.font-normal.text-start
 ul.-mx-1.5.flex.flex-1.flex-col.px-1.5.gap-px`;
 
+const SAMPLE_HTML = `<nav class="flex flex-col px-2 gap-px">
+  <a class="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-bg-200">Home</a>
+  <a class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-bg-200">Projects</a>
+  <a class="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-bg-200">Settings</a>
+</nav>
+<ul class="flex flex-col gap-1 py-4">
+  <li class="flex items-center gap-2 transition border-t-0.5 border-transparent">
+    <div class="flex shrink-0 items-center justify-center rounded-full h-9 w-9 bg-text-200 text-bg-100">A</div>
+    <h3 id="_r_a1_" class="text-[12px] break-words text-text-100 line-clamp-4">First thread</h3>
+  </li>
+  <li class="flex items-center gap-2 transition border-t-0.5 border-transparent">
+    <div class="flex shrink-0 items-center justify-center rounded-full h-9 w-9 bg-text-300 text-bg-100">B</div>
+    <h3 id="_r_b2_" class="text-[12px] break-words text-text-100 line-clamp-4">Second thread</h3>
+  </li>
+  <li class="flex items-center gap-2 transition border-t-0.5 border-transparent">
+    <div class="flex shrink-0 items-center justify-center rounded-full h-9 w-9 bg-text-400 text-bg-100">C</div>
+    <h3 id="_r_c3_" class="text-[12px] break-words text-text-100 line-clamp-4">Third thread</h3>
+  </li>
+</ul>
+<div class="flex flex-col gap-2 py-2">
+  <button class="inline-flex items-center justify-center font-base-bold rounded-md px-3 h-8">Reply</button>
+  <button class="inline-flex items-center justify-center font-base-bold rounded-lg px-4 h-9">Send</button>
+  <button class="inline-flex items-center justify-center font-base-bold rounded-md px-3 h-8">Cancel</button>
+</div>`;
+
 document.addEventListener('alpine:init', () => {
     Alpine.data('groupDemo', () => ({
         // ── Input ──
         inputText: DEFAULT_SIGNATURES,
+        inputMode: 'strings',   // 'strings' (pre-segmented) or 'html' (Stage 1 extraction)
 
         // ── Options ──
         maxSlots: 1,
@@ -318,12 +361,28 @@ document.addEventListener('alpine:init', () => {
         },
 
         loadDefaults() {
+            this.inputMode = 'strings';
             this.inputText = DEFAULT_SIGNATURES;
             this.run();
         },
 
+        loadHtmlSample() {
+            this.inputMode = 'html';
+            this.inputText = SAMPLE_HTML;
+            this.delimiter = '.';   // signatures are dot-delimited
+            this.run();
+        },
+
+        // Stage 1 for the DOM use case: parse HTML in-browser and emit signatures.
+        extractFromHtml() {
+            const doc = new DOMParser().parseFromString(this.inputText, 'text/html');
+            return window._gbt.extractSignaturesFromNodes(doc.body || doc);
+        },
+
         run() {
-            const lines = this.inputText.trim().split('\n').map(s => s.trim()).filter(Boolean);
+            const lines = this.inputMode === 'html'
+                ? this.extractFromHtml()
+                : this.inputText.trim().split('\n').map(s => s.trim()).filter(Boolean);
             if (lines.length === 0) {
                 this.groups = [];
                 this.ungrouped = [];
