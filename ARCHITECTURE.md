@@ -43,7 +43,7 @@ Run Sequitur on the token stream. Sequitur replaces repeated digrams with gramma
 
 Sequitur finds exact repeats only. If two sequences differ at any position, no rule is formed. This is the gap that Stage 3 addresses.
 
-**Status**: Conceptual. No implementation. (The suffix tree prototype in `phase-1-discovery/demos/` validated that repeat enumeration works in the browser at O(n), but it implements a different algorithm — suffix tree traversal, not Sequitur.)
+**Status**: Implemented via **Re-Pair** (`general/grammar.js`), behind a neutral `{ start, rules, ruleUses }` grammar interface. Re-Pair is an offline member of the same grammar-induction family: it greedily replaces the globally most-frequent digram and produces the same hierarchy of exact repeats Stage 3 needs. Online Sequitur can be dropped in behind the same interface later (an initial Sequitur attempt was abandoned for fragile incremental pointer surgery — correctness of Stage 2 matters more than which family member provides it). The suffix tree prototype in `phase-1-discovery/demos/` separately validated O(n) repeat enumeration in the browser.
 
 ---
 
@@ -98,7 +98,7 @@ Concepts that remain valid from the phase specs:
 - **Hierarchy**: templates may nest (a slot value may itself match another template)
 - **Residual diagnosis**: high-entropy residual = satiety; low-entropy residual = latent structure worth revisiting
 
-**Status**: A working slice exists. `groupByTemplate` (Stage 3) already ranks candidate templates by an MDL-inspired score `(groupSize − 1) × literalChars` and greedily assigns each signature to at most one non-overlapping template — Krimp-style greedy selection at single-document scale. What remains unbuilt is the full cost model (explicit dictionaryCost + dataCost + residualCost) and weighted interval scheduling for templates that compete for the same characters. The Phase 4 spec (`phase-4-selection/README.md`) details those and applies without modification.
+**Status**: Built at two levels. `groupByTemplate` (Stage 3) contains a greedy MDL slice that assigns each *record* to at most one template. The fuller version lives in `selection/mdl-select.js`: an explicit MDL cost model (dictionaryCost + dataCost + residualCost) plus **exact weighted interval scheduling** (O(n log n) DP, verified optimal against brute force) for candidate templates whose instances overlap on the same characters, wrapped in Krimp-style greedy template inclusion. It is standalone today and becomes load-bearing once a candidate generator emits overlapping instances. The Phase 4 spec (`phase-4-selection/README.md`) applies without modification.
 
 ---
 
@@ -115,6 +115,9 @@ Map selected templates back to the original document. For each template, produce
 | Component | Evidence |
 |---|---|
 | End-to-end DOM induction (HTML → signatures → templates) | `node dom-signatures/induce-from-html.js dom-signatures/fixtures/sample.html`; tested by `dom-signatures/test-extract.js` |
+| End-to-end general-text induction (Tokenize → grammar → templates) | `node general/induce.js general/fixtures/access.log`; lossless at every layer, tested by `general/test-induce.js` |
+| Grammar induction (Re-Pair), Stage 2 | `general/grammar.js`; reconstruction + rule-utility invariants in `general/test-grammar.js` |
+| Weighted interval scheduling, Stage 4 | `selection/mdl-select.js`; exact, verified vs brute force over 400 random cases |
 | Bookend Merge + greedy MDL selection (Stages 3–4) | `dom-signatures/group-by-template.js`; 90–91% grouped, 100% reconstruction on 81 real signatures |
 | Suffix tree construction (Ukkonen's, SoA layout) | Working prototype: `phase-1-discovery/demos/custom-suffix-tree-engine.html` |
 | Repeat extraction + super-string collapsing | Prototype produces correct results on invoice test data |

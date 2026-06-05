@@ -2,33 +2,40 @@
 
 Single-document template induction from internal repetition.
 
-**Status**: Research phase, with one end-to-end path. The DOM use case runs a real
-document through the pipeline (HTML → templates); the general-text front-end
-(Tokenize → Sequitur) is still design specs and research. See
-[`ARCHITECTURE.md`](ARCHITECTURE.md) for the canonical pipeline description.
+**Status**: Two end-to-end paths run today — a DOM path (HTML → templates) and a
+general-text path (Tokenize → grammar → templates). Every stage of the pipeline now
+has at least a working implementation. See [`ARCHITECTURE.md`](ARCHITECTURE.md) for
+the canonical pipeline description.
 
 ## What exists today
 
 | | What | Where |
 |---|---|---|
 | ✅ **Runnable** | **End-to-end DOM induction** — raw HTML → signatures → slotted templates | [`dom-signatures/induce-from-html.js`](dom-signatures/induce-from-html.js) |
-| ✅ **Runnable** | `extractSignatures` — DOM segmenter (Stage 1), HTML → `tag#id.class` signatures | [`dom-signatures/extract-signatures.js`](dom-signatures/extract-signatures.js) |
-| ✅ **Runnable** | `groupByTemplate` — Bookend Merge (Stage 3) + greedy MDL selection (Stage 4 slice) | [`dom-signatures/`](dom-signatures/README.md) |
-| ✅ **Runnable** | Interactive browser demo, 81 real DOM signatures pre-loaded | [`dom-signatures/demo.html`](dom-signatures/demo.html) |
-| 🧪 **Prototype** | Suffix-tree repeat-enumeration engine (validates browser-viability, not the Sequitur path) | [`phase-1-discovery/demos/`](phase-1-discovery/README.md) |
-| 📝 **Spec only** | General-text Tokenize, Sequitur grammar induction | `ARCHITECTURE.md`, `phase-*/` |
+| ✅ **Runnable** | **End-to-end general-text induction** — Tokenize → grammar (Re-Pair) → Bookend Merge | [`general/induce.js`](general/README.md) |
+| ✅ **Runnable** | `extractSignatures` — DOM segmenter (Stage 1); `tokenize` — general segmenter (Stage 1) | [`dom-signatures/`](dom-signatures/README.md), [`general/`](general/README.md) |
+| ✅ **Runnable** | `induceGrammar` — Stage 2 grammar induction (Re-Pair) | [`general/grammar.js`](general/grammar.js) |
+| ✅ **Runnable** | `groupByTemplate` — Bookend Merge (Stage 3) + greedy MDL selection | [`dom-signatures/`](dom-signatures/README.md) |
+| ✅ **Runnable** | `selectTemplates` — Stage 4 full MDL + exact weighted interval scheduling | [`selection/`](selection/README.md) |
+| ✅ **Runnable** | Interactive browser demo — group signatures, or paste raw HTML (Stage 1 + 3) | [`dom-signatures/demo.html`](dom-signatures/demo.html) |
+| 🧪 **Prototype** | Suffix-tree repeat-enumeration engine (validates browser-viability) | [`phase-1-discovery/demos/`](phase-1-discovery/README.md) |
+| 📝 **Spec only** | Online Sequitur (Re-Pair stands in for Stage 2 today) | `ARCHITECTURE.md` |
 | 📚 **Research** | Distilled LLM research reports + conceptual foundations | [`research/`](research/README.md), `exploration/` |
 
 ```bash
-# Induce templates from a real HTML document in ~5 seconds:
+# Induce templates from a real HTML document:
 node dom-signatures/induce-from-html.js dom-signatures/fixtures/sample.html
+
+# Induce templates from a log / free text:
+node general/induce.js general/fixtures/access.log --records lines --max-slots 8
 ```
 
-The **DOM use case is end-to-end**: a real HTML document flows through segmentation
-(Stage 1), Bookend Merge (Stage 3), greedy MDL selection (a slice of Stage 4), and
-reconstruction (Stage 5). Exact grammar induction (Stage 2) is skipped here because a
-DOM signature is already an atomic unit. A **general-text** pipeline still needs the
-Tokenize → Sequitur front-end before Stage 3 — that's the main remaining gap.
+Both paths reconstruct losslessly. The honest frontier is **template quality on
+multi-field records**: Bookend Merge anchors on the longest shared *literal*, which
+on a log line is an incidental field (the client IP) rather than the structural
+skeleton — so structural, multi-field grouping (a Stage 3 generalization, and the
+[`selection/`](selection/README.md) layer for overlapping candidates) is the next
+quality lever. See [`general/README.md`](general/README.md) for the full findings.
 
 ## Problem
 
