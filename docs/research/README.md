@@ -26,7 +26,7 @@ Each `question.md` file is designed to be provided to AI deep research engines a
 **Example workflow:**
 ```bash
 # Provide both files to get focused research
-cat README.md research/01-tokenization-typing/question.md | [ai-engine]
+cat README.md docs/research/01-tokenization-typing/question.md | [ai-engine]
 ```
 
 ### Recording Findings

@@ -43,7 +43,7 @@ Run Sequitur on the token stream. Sequitur replaces repeated digrams with gramma
 
 Sequitur finds exact repeats only. If two sequences differ at any position, no rule is formed. This is the gap that Stage 3 addresses.
 
-**Status**: Implemented via **Re-Pair** (`general/grammar.js`), behind a neutral `{ start, rules, ruleUses }` grammar interface. Re-Pair is an offline member of the same grammar-induction family: it greedily replaces the globally most-frequent digram and produces the same hierarchy of exact repeats Stage 3 needs. Online Sequitur can be dropped in behind the same interface later (an initial Sequitur attempt was abandoned because its incremental pointer surgery was fragile, and correctness of Stage 2 matters more than which family member provides it). The suffix tree prototype in `phase-1-discovery/demos/` separately validated O(n) repeat enumeration in the browser.
+**Status**: Implemented via **Re-Pair** (`general/grammar.js`), behind a neutral `{ start, rules, ruleUses }` grammar interface. Re-Pair is an offline member of the same grammar-induction family: it greedily replaces the globally most-frequent digram and produces the same hierarchy of exact repeats Stage 3 needs. Online Sequitur can be dropped in behind the same interface later (an initial Sequitur attempt was abandoned because its incremental pointer surgery was fragile, and correctness of Stage 2 matters more than which family member provides it). The suffix tree prototype (now surfaced as `demos/custom-suffix-tree-engine.html`) separately validated O(n) repeat enumeration in the browser.
 
 ---
 
@@ -65,7 +65,7 @@ Merge → A B $1 D E    where $1 := {C, X, Y}
 
 Slots are discovered as positions where rule bodies diverge. No pre-declaration of slot types needed. A slot's identity is the set of values observed at that position. Characterization (numeric, enum, timestamp) is optional post-hoc analysis.
 
-**Open questions** (from `research/FirstReview.md`):
+**Open questions** (from `docs/research/FirstReview.md`):
 
 | Question | Consideration |
 |---|---|
@@ -100,7 +100,7 @@ Concepts that remain valid from the phase specs:
 - **Hierarchy**: templates may nest (a slot value may itself match another template)
 - **Residual diagnosis**: high-entropy residual = satiety; low-entropy residual = latent structure worth revisiting
 
-**Status**: Built at two levels. `groupByTemplate` (Stage 3) contains a greedy MDL slice that assigns each *record* to at most one template. The fuller version lives in `selection/mdl-select.js`: an explicit MDL cost model (dictionaryCost + dataCost + residualCost) plus **exact weighted interval scheduling** (O(n log n) DP, verified optimal against brute force) for candidate templates whose instances overlap on the same characters, wrapped in Krimp-style greedy template inclusion. It is standalone today and becomes load-bearing once a candidate generator emits overlapping instances. The Phase 4 spec (`phase-4-selection/README.md`) applies without modification.
+**Status**: Built at two levels. `groupByTemplate` (Stage 3) contains a greedy MDL slice that assigns each *record* to at most one template. The fuller version lives in `selection/mdl-select.js`: an explicit MDL cost model (dictionaryCost + dataCost + residualCost) plus **exact weighted interval scheduling** (O(n log n) DP, verified optimal against brute force) for candidate templates whose instances overlap on the same characters, wrapped in Krimp-style greedy template inclusion. It is standalone today and becomes load-bearing once a candidate generator emits overlapping instances. The Phase 4 spec (`docs/history/phase-4-selection/README.md`) applies without modification.
 
 ---
 
@@ -121,7 +121,7 @@ Map selected templates back to the original document. For each template, produce
 | Grammar induction (Re-Pair), Stage 2 | `general/grammar.js`; reconstruction + rule-utility invariants in `general/test-grammar.js` |
 | Weighted interval scheduling, Stage 4 | `selection/mdl-select.js`; exact, verified vs brute force over 400 random cases |
 | Bookend Merge + greedy MDL selection (Stages 3-4) | `core/group-by-template.js`; 90-91% grouped, 100% reconstruction on 81 real signatures (`core/test-group.js`) |
-| Suffix tree construction (Ukkonen's, SoA layout) | Working prototype: `phase-1-discovery/demos/custom-suffix-tree-engine.html` |
+| Suffix tree construction (Ukkonen's, SoA layout) | Working prototype: `demos/custom-suffix-tree-engine.html` |
 | Repeat extraction + super-string collapsing | Prototype produces correct results on invoice test data |
 | Character Allocation invariant | Enforced and verified in prototype (symbolStream + residual = full document) |
 | Browser-viable TypedArray architecture | Prototype runs in-browser with no GC issues on test inputs |
@@ -139,7 +139,7 @@ Map selected templates back to the original document. For each template, produce
 
 ## Relationship to Existing Phase Specs
 
-The four phase directories (`phase-1-discovery/` through `phase-4-selection/`) were written before the Sequitur + Bookend Merge pivot. They describe a different algorithmic path: suffix array + LCP enumeration, followed by pairwise gap-variance scoring, followed by center-star alignment, followed by MDL selection.
+The four phase directories (`docs/history/phase-1-discovery/` through `docs/history/phase-4-selection/`) were written before the Sequitur + Bookend Merge pivot. They are archived under `docs/history/`; see `docs/history/README.md` for how their four-phase numbering relates to this pipeline's five stages. They describe a different algorithmic path: suffix array + LCP enumeration, followed by pairwise gap-variance scoring, followed by center-star alignment, followed by MDL selection.
 
 **What still applies from those specs:**
 - Interface contracts (TypedArray layouts, typed output structures)
@@ -179,6 +179,6 @@ These hold across both paths and are non-negotiable:
 
 These documents remain current and are not affected by the algorithmic pivot:
 
-- `exploration/Intuition.md`: first-principles observations about template structure
-- `exploration/Terms.md`: vocabulary for matching and emergence
-- `exploration/Order.md`: the decoy problem and distance-based discrimination (still valid as a concept; the implementation path changed)
+- `docs/concepts/Intuition.md`: first-principles observations about template structure
+- `docs/concepts/Terms.md`: vocabulary for matching and emergence
+- `docs/concepts/Order.md`: the decoy problem and distance-based discrimination (still valid as a concept; the implementation path changed)
