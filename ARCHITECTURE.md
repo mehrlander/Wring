@@ -187,6 +187,7 @@ These hold across both paths and are non-negotiable:
 
 These documents remain current and are not affected by the algorithmic pivot:
 
+- `docs/concepts/Foundations.md`: the premises, objectives, and primitive model behind Wring (design rationale)
 - `docs/concepts/Intuition.md`: first-principles observations about template structure
 - `docs/concepts/Terms.md`: vocabulary for matching and emergence
 - `docs/concepts/Order.md`: the decoy problem and distance-based discrimination (still valid as a concept; the implementation path changed)
