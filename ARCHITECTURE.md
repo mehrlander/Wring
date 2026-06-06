@@ -12,9 +12,11 @@ Given one document, discover its recurring structure. No prior knowledge of what
 
 ```
 Tokenize  ──>  Sequitur  ──>  Bookend Merge  ──>  Selection  ──>  Extraction
+            (Re-Pair today)
 ```
 
-Five stages. Each consumes the output of the previous.
+Five stages. Each consumes the output of the previous. Stage 2 names Sequitur for
+the family; the implemented carrier is Re-Pair (see §2 for why).
 
 ---
 
@@ -126,14 +128,20 @@ Map selected templates back to the original document. For each template, produce
 | Character Allocation invariant | Enforced and verified in prototype (symbolStream + residual = full document) |
 | Browser-viable TypedArray architecture | Prototype runs in-browser with no GC issues on test inputs |
 
-## What's Speculative
+## What's Still Open
+
+These are genuine frontiers, not unbuilt basics. The five stages above all have
+working implementations (see "What's Validated"); what remains is depth.
 
 | Component | Notes |
 |---|---|
-| Sequitur on tokenized input | Core algorithm is well-studied, but not yet implemented here |
-| Bookend Merge | Key insight of the project, but the algorithm details are open |
-| Pairwise consistency / distance matrix | From the earlier Phase 2 spec; may be unnecessary if Bookend Merge works, or may serve as a ranking signal for merge candidates |
-| MDL selection and interval scheduling | Specified in detail (Phase 4 spec) but not implemented |
+| Online Sequitur | Re-Pair stands in for Stage 2 today behind the same grammar interface; an incremental Sequitur can replace it later. Both are well-studied. |
+| Record-boundary discovery | Splitting a delimiter-free stream into records purely from the grammar (the `anchor` strategy) is unsolved when the dominant repeat doesn't coincide with the record unit. |
+| Differing field counts | Structural alignment buckets records by token count, so records whose field *count* differs land in separate buckets and go ungrouped. |
+| Overlapping-candidate selection | `selection/mdl-select.js` (exact weighted interval scheduling + Krimp-style greedy) is built and tested, but only becomes load-bearing once a generator emits candidates that compete for the same characters. |
+| Nested / hierarchical templates | Slot values that themselves match another template (a parse DAG) are modeled conceptually but not yet produced. |
+| Offset-level extraction | Slot values map back to signature/token strings, not yet to byte offsets in the source document. |
+| Pairwise consistency / distance matrix | From the earlier Phase 2 spec; may be unnecessary given Bookend Merge, or may serve as a ranking signal for merge candidates. |
 
 ---
 
