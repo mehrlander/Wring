@@ -7,6 +7,9 @@ page, and it returns the recurring **templates** (fixed boilerplate with variabl
 **slots**) plus the values that fill each slot. It is lossless: the templates and
 their slot values reconstruct the original document exactly.
 
+**Requirements:** Node 18+ and a browser. No dependencies, no install, no build step —
+every script runs with `node` directly, and every demo opens straight in a browser.
+
 ## What you actually get
 
 **A log file → one template, one slot per field.**
@@ -42,6 +45,11 @@ out   div.flex.…rounded-full.h-9.w-9.bg-text-${0}00.text-bg-100      ← avata
 
 Same idea on DOM structure: each repeated UI component surfaces as a template, its
 per-instance differences as slots.
+
+> The field names (`ip`, `seconds`, `method`…) and the `← avatar` labels above are
+> read off by hand to show what the slots *mean*; the tools themselves report bare
+> `slot 0..n` with the values observed at each. `…` abbreviates long signatures for
+> the page. Run the commands to see the raw output.
 
 **That is the deliverable.** Boilerplate is separated from data, and the split
 reverses exactly. Everything below is how it is built and what is still open.
