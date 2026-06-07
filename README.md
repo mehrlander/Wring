@@ -44,7 +44,9 @@ out   div.flex.…rounded-full.h-9.w-9.bg-text-${0}00.text-bg-100      ← avata
 ```
 
 Same idea on DOM structure: each repeated UI component surfaces as a template, its
-per-instance differences as slots.
+per-instance differences as slots. On this fixture that is 5 templates covering
+18 of 27 signatures, all reconstructing exactly; on the larger 81-signature corpus
+in `core/test-group.js` the same engine groups 90-91% (see below).
 
 > The field names (`ip`, `seconds`, `method`…) and the `← avatar` labels above are
 > read off by hand to show what the slots *mean*; the tools themselves report bare
@@ -75,10 +77,11 @@ the five-stage pipeline now has a working, tested implementation.** See
 Run the whole test suite (six harnesses, all green):
 
 ```bash
-for t in core/test-group.js dom/test-extract.js \
-         general/test-grammar.js general/test-induce.js general/test-align.js \
-         selection/test-mdl-select.js; do node "$t" >/dev/null && echo "ok $t"; done
+npm test
 ```
+
+That runs all six harnesses in sequence and fails if any does. To run one on its
+own, invoke it directly, e.g. `node core/test-group.js`.
 
 **What's still open** (honest frontiers, not loose ends): reconciling records whose
 field *count* differs; discovering record boundaries with no delimiter; and putting
@@ -124,8 +127,10 @@ Five stages, and every one has a real implementation today. See
   records with many independent fields (logs).
 - **DOM** ([`dom/`](dom/README.md)): `extractSignatures` →
   `groupByTemplate` (+ greedy MDL selection) → reconstruction check. Driver:
-  `induce-from-html.js`, plus an [interactive demo](dom/demo.html). On 81
-  hand-collected signatures it groups 90-91% with 100% reconstruction fidelity.
+  `induce-from-html.js`, plus an [interactive demo](dom/demo.html). On the
+  `sample.html` fixture it groups 18 of 27 signatures; on the larger 81-signature
+  corpus exercised by `core/test-group.js` it groups 90-91%, both with 100%
+  reconstruction fidelity.
 
 Both front-ends share one Stage-3/4 engine, [`core/group-by-template.js`](core/README.md),
 so the generic algorithm lives in `core/` rather than inside either use case.
