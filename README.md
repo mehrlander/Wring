@@ -7,7 +7,7 @@ page, and it returns the recurring **templates** (fixed boilerplate with variabl
 **slots**) plus the values that fill each slot. It is lossless: the templates and
 their slot values reconstruct the original document exactly.
 
-**Requirements:** Node 18+ and a browser. No dependencies, no install, no build step —
+**Requirements:** a recent Node and a browser. No dependencies, no install, no build step —
 every script runs with `node` directly, and every demo opens straight in a browser.
 
 ## What you actually get
