@@ -41,23 +41,17 @@ Output:
   Slot values: "14a_", "14k_", "d1_", ...
 ```
 
-### Algorithm (6 phases)
+### The engine is shared — see `core/`
 
-| Phase | What happens |
-|-------|-------------|
-| **1. Pairwise Bookend Merge** | Compare all pairs of token sequences; find shared prefix + suffix, treat the divergent middle as a slot |
-| **2. Broadcast matching** | Test each candidate template against all inputs, not just the originating pair |
-| **3. MDL scoring** | Rank by compression gain: `(groupSize - 1) * literalChars` |
-| **4. Greedy assignment** | Select highest-scoring templates first; no string assigned to multiple groups |
-| **5. Character-level refinement** | Tighten slot boundaries by absorbing common character prefixes/suffixes into the template |
-| **6. Multi-slot refinement (LCS)** | Optionally split a single slot into multiple slots by discovering internal anchors via Longest Common Subsequence |
+The grouping itself (pairwise bookend merge → broadcast matching → MDL scoring →
+greedy assignment → character + multi-slot refinement, plus the `compress`/`specific`
+strategies and all configuration options) is the use-case-independent engine. It is
+documented once in [`core/README.md`](../core/README.md), because the general-text
+front-end calls the very same code. It is **lossless**: `reconstruct(template, slots)`
+reproduces every grouped member exactly.
 
-### Key Properties
-
-- **Lossless**: `reconstruct(template, slots)` exactly reproduces the original string for every grouped member
-- **MDL-optimal**: greedy selection maximizes total compression gain
-- **Two strategies**: `compress` (broad groups, maximum compression) vs `specific` (fine-grained sub-groups)
-- **Configurable**: slot count, group size threshold, delimiter, and refinement toggles
+What's specific to this directory is the **DOM segmenter** (above) that produces the
+signature strings, and the **results on real DOM data** (below).
 
 ## Results on Test Data
 
@@ -128,34 +122,11 @@ is exactly that: a different segmenter (Tokenize → grammar) feeding the same s
 
 ## Usage
 
-### Browser (ES module)
-
-```js
-import { groupByTemplate, summarize, reconstruct } from '../core/group-by-template.js';
-
-const result = groupByTemplate(strings, {
-  maxSlots: 1,        // max interpolation slots per template
-  minGroupSize: 2,    // minimum members per group
-  strategy: 'compress', // 'compress' or 'specific'
-  refineSlots: true,  // character-level boundary refinement
-  delimiter: '.',     // token delimiter
-});
-
-console.log(summarize(result));
-```
-
-### Node.js
-
-```js
-const { groupByTemplate, summarize, reconstruct } = require('../core/group-by-template.js');
-
-const result = groupByTemplate(strings);
-for (const g of result.groups) {
-  for (const m of g.members) {
-    console.assert(reconstruct(g.template, m.slots) === m.original);
-  }
-}
-```
+The end-to-end composition for DOM (`extractSignatures` → `groupByTemplate` →
+`summarize`) is shown under [raw HTML → templates](#end-to-end-raw-html--templates)
+above. The engine's full options (`maxSlots`, `minGroupSize`, `strategy`,
+`refineSlots`, `delimiter`) and its `reconstruct` round-trip are documented once in
+[`core/README.md` § API](../core/README.md#api), since they are not DOM-specific.
 
 ### CLI tests
 
@@ -166,14 +137,14 @@ node dom/test-extract.js   # DOM segmenter + end-to-end HTML path
 
 ## Relation to Wring Pipeline
 
-This directory implements multiple stages from [`ARCHITECTURE.md`](../ARCHITECTURE.md) for the DOM use case. The full Wring pipeline is:
+The canonical five-stage pipeline is defined in [`ARCHITECTURE.md`](../ARCHITECTURE.md).
+The DOM path maps onto it as:
 
-1. **Tokenize**: segment the document into a symbol stream. Done by `extract-signatures.js` (the DOM segmenter).
-2. **Sequitur**: grammar induction to find exact repeats. Not yet built; the DOM path skips it.
-3. **Bookend Merge**: align near-identical rules into slotted templates. Done by the shared `../core/group-by-template.js`.
-4. **Selection**: rank by MDL and resolve overlapping candidates. A greedy MDL slice lives inside `../core/group-by-template.js`.
-5. **Extraction**: map templates back to source text and verify reconstruction. Done by `reconstruct` plus the fidelity checks.
+- **Stage 1 · Tokenize** → `extract-signatures.js` (the DOM segmenter)
+- **Stage 2 · Grammar** → *skipped*. A DOM signature is already an atomic unit, so there
+  are no sub-token repeats for a grammar to find; the segmenter feeds Bookend Merge directly.
+- **Stages 3-4 · Bookend Merge + Selection** → the shared [`../core/`](../core/README.md) engine
+- **Stage 5 · Extraction** → `reconstruct` plus the fidelity checks
 
-For DOM signatures, exact grammar induction (Stage 2) is unnecessary: an element's
-signature is already an atomic unit, so the segmenter feeds Bookend Merge directly.
-A general-text pipeline would insert Tokenize → Sequitur ahead of Stage 3.
+The general-text path ([`../general/`](../general/README.md)) differs only at the front:
+it inserts Tokenize → Grammar ahead of Stage 3.

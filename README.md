@@ -7,6 +7,9 @@ page, and it returns the recurring **templates** (fixed boilerplate with variabl
 **slots**) plus the values that fill each slot. It is lossless: the templates and
 their slot values reconstruct the original document exactly.
 
+**Requirements:** Node 18+ and a browser. No dependencies, no install, no build step —
+every script runs with `node` directly, and every demo opens straight in a browser.
+
 ## What you actually get
 
 **A log file → one template, one slot per field.**
@@ -43,6 +46,11 @@ out   div.flex.…rounded-full.h-9.w-9.bg-text-${0}00.text-bg-100      ← avata
 Same idea on DOM structure: each repeated UI component surfaces as a template, its
 per-instance differences as slots.
 
+> The field names (`ip`, `seconds`, `method`…) and the `← avatar` labels above are
+> read off by hand to show what the slots *mean*; the tools themselves report bare
+> `slot 0..n` with the values observed at each. `…` abbreviates long signatures for
+> the page. Run the commands to see the raw output.
+
 **That is the deliverable.** Boilerplate is separated from data, and the split
 reverses exactly. Everything below is how it is built and what is still open.
 
@@ -77,46 +85,21 @@ field *count* differs; discovering record boundaries with no delimiter; and putt
 the [`selection/`](selection/README.md) MDL layer to work once a generator emits
 overlapping candidates. Full findings in [`general/README.md`](general/README.md).
 
-## Problem
+## What it's for
 
-Given one document, infer a compact set of recurring patterns (templates) and an instance map of their occurrences. 
+Given one document, infer a compact set of recurring patterns (templates) and a map of
+where their instances occur, optimizing for a balance of compression and human
+interpretability. The bias is toward interpretability over maximal compression:
 
-The goal is to optimize for a balance of compression and human interpretability.
-
-```mermaid
-flowchart TD
-    Document --> Instances
-    Document --> Residual["Residual (Unstructured)"]
-
-    Instances --> Primitives
-    
-    Primitives --> Literal["Literal (Invariant)"]
-    Primitives --> Slot["Slot (Variable)"]
-    Primitives --> Whitespace["Whitespace (Layout)"]
-```
-
-## Use Cases
-
-Prioritize interpretability over maximal compression:
  * Structured documents (budget bills, legislation): infer markup structure for annotation or XML conversion
  * Web development: convert repetitive HTML into data-driven JS generation
  * Logs: separate boilerplate from variable content to surface the actual information
 
-## Core Objectives
-
- * **Character Allocation**: Every character, including whitespace, is allocated to one of three primitive types: Literals, Slots, or Whitespace. Un-patterned text is designated as Residual.
- * **Reconstruction Fidelity**: The default model aims for exact reproduction. By treating Whitespace as a distinct primitive, the system can optionally expunge "formatting noise" for readability, acknowledging the trade-off.
- * **Structural Separation**: The system decomposes the document into recurring structural patterns (templates) and their specific occurrences (instances), separating boilerplate from variable content.
- * **Browser-First Performance**: Discovery and indexing logic is optimized for browser memory and execution limits (~100KB-10MB range), utilizing WASM for high-density indexing where necessary.
-
-## Key Assumptions
-
-* **Templates are Grounded in Repeats**: Templates link repeated substrings. We can start from repeated substrings and get to any template. 
-* **The "DRY" Objective**: The goal is to "dry up" a document to make the underlying data more intelligible by removing redundant text.
-* **Structural vs. Floating Repeats**: Some repeats are "foundational" and tied to document architecture; others are "floating" or transversal. What constitutes structure must be assessed from a perspective. Low variance in relative distance suggests structural; high variance suggests incidental.
-* **Idealized Forms**: A template should bind to a meaningful structure. This may involve gravitating toward instances that support a coherent model, and away from instances that pollute it.
-* **Flat or Hierarchical**: Instances may cover disjoint regions (flat model, simple interval scheduling) or form a parse DAG where templates contain other templates (hierarchical model, captures nesting but requires defined decoding order). Either may be of interest depending on the document.
-* **Navigable Discovery**: Discovery may benefit from a human-in-the-loop process. The algorithm proposes potential structures; the user navigates and selects the abstractions that are most meaningful.
+The premises and objectives behind this — the primitive model, the design goals, and
+the assumptions Wring makes about what "structure" is — live in
+[`docs/concepts/Foundations.md`](docs/concepts/Foundations.md). The two non-negotiable
+output guarantees, **Character Allocation** and **Reconstruction Fidelity**, are stated
+as invariants in [`ARCHITECTURE.md`](ARCHITECTURE.md#key-invariants).
 
 ---
 
@@ -164,6 +147,7 @@ The `phase-*/` directories under [`docs/history/`](docs/history/README.md) conta
 
 Conceptual foundations and terminology live in [`docs/concepts/`](docs/concepts/):
 
+- **Foundations.md**: The premises, objectives, and primitive model behind Wring (the design rationale)
 - **Intuition.md**: First-principles observations about template structure
 - **Terms.md**: Vocabulary for matching (seat, bind, register) and emergence (crystallize, induce, distill)
 - **Order.md**: Quantifying ordered relationships; distinguishing structural anchors from variable decoys

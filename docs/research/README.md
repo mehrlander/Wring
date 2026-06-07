@@ -4,7 +4,12 @@ This directory contains deep research on each of the core questions for the Wrin
 
 ## Structure
 
-Each research question has its own folder containing:
+**Start here:** [`FINDINGS.md`](FINDINGS.md) is the consolidated synthesis across all
+research areas — read it first for the distilled conclusions. [`FirstReview.md`](FirstReview.md)
+captures the critical review that fed the Sequitur + Bookend Merge pivot now described
+in [`ARCHITECTURE.md`](../../ARCHITECTURE.md).
+
+Each research question then has its own folder:
 
 1. **01-tokenization-typing/** - What representation best supports template discovery?
 2. **02-repeat-primitives/** - Which primitives yield high-signal candidates while avoiding pattern explosion?
@@ -14,8 +19,12 @@ Each research question has its own folder containing:
 6. **06-implementation/** - JS/WASM architecture for practical use
 
 Each folder contains:
-- **question.md** - The focused research question for AI deep research
-- Additional files will be added as research reports are collected and distilled
+- **question.md** - The focused research question posed to AI deep research engines
+- **gemini-report.md**, **gpt-report.md** - The raw reports collected back (01-05)
+- **distilled.md** - The findings distilled for that question (01-05)
+
+Folders 01-05 are complete (question + reports + distilled). 06-implementation is
+question-only so far.
 
 ## Usage
 
@@ -42,4 +51,8 @@ See also: [Research Question 3: Template Formation](../03-template-formation/)
 
 ## Status
 
-All research questions are currently open. Research reports will be accumulated as research progresses.
+Questions 01-05 have been researched and distilled, and their conclusions are
+consolidated in [`FINDINGS.md`](FINDINGS.md). Question 06 (implementation) remains
+open as a question only. The research has already been acted on: it produced the
+Sequitur + Bookend Merge architecture that [`ARCHITECTURE.md`](../../ARCHITECTURE.md)
+now describes and the code implements.
