@@ -184,14 +184,16 @@ export function summarize(result) {
  */
 export function reconstruct(template, slots, delimiter = '.') {
   let result = template;
-  // Process in reverse to handle multi-digit indices correctly
+  // Process in reverse to handle multi-digit indices correctly.
+  // Replacements use a function so that "$&", "$$" etc. in slot values are
+  // inserted verbatim instead of being treated as replacement patterns.
   for (let i = slots.length - 1; i >= 0; i--) {
     const marker = '${' + i + '}';
     const val = slots[i];
     if (val === '') {
       // Remove marker and collapse one adjacent delimiter
       if (result.includes(delimiter + marker + delimiter)) {
-        result = result.replace(delimiter + marker + delimiter, delimiter);
+        result = result.replace(delimiter + marker + delimiter, () => delimiter);
       } else if (result.includes(delimiter + marker)) {
         result = result.replace(delimiter + marker, '');
       } else if (result.includes(marker + delimiter)) {
@@ -200,7 +202,7 @@ export function reconstruct(template, slots, delimiter = '.') {
         result = result.replace(marker, '');
       }
     } else {
-      result = result.replace(marker, val);
+      result = result.replace(marker, () => val);
     }
   }
   return result;
@@ -354,8 +356,9 @@ function refineCharBoundaries(group, minCharLen = 2) {
 
   if (cpre.length === 0 && csuf.length === 0) return;
 
-  // Update template string
-  group.template = group.template.replace('${0}', cpre + '${0}' + csuf);
+  // Update template string (function replacer: cpre/csuf are data and may
+  // contain "$" replacement patterns)
+  group.template = group.template.replace('${0}', () => cpre + '${0}' + csuf);
 
   // Update slot values
   for (const m of group.members) {
@@ -449,7 +452,8 @@ function refineMultiSlot(group, maxSlots, delimiter) {
     }
   }
   const innerTemplate = innerParts.join(delimiter);
-  group.template = group.template.replace('${0}', innerTemplate);
+  // Function replacer: anchors are data and may contain "$" patterns.
+  group.template = group.template.replace('${0}', () => innerTemplate);
 
   // Update member slot values
   for (let m = 0; m < group.members.length; m++) {
