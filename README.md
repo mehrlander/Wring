@@ -71,6 +71,7 @@ the five-stage pipeline now has a working, tested implementation.** See
 | ✅ **Runnable** | `induceGrammar`: grammar induction via Re-Pair (Stage 2) | [`general/grammar.js`](general/grammar.js) |
 | ✅ **Runnable** | `groupByTemplate` (literal bookends) and `groupByAlignment` (positional): Stage 3 | [`core/`](core/README.md), [`general/`](general/README.md) |
 | ✅ **Runnable** | `selectTemplates`: MDL plus exact weighted interval scheduling (Stage 4) | [`selection/`](selection/README.md) |
+| 📦 **Handoff** | The engine packaged as a web-tools *kit* plus ported demo pages, ready to copy into [`mehrlander/web-tools`](https://github.com/mehrlander/web-tools) (see the move manifest) | [`export/`](export/README.md) |
 | 📝 **Spec only** | Online Sequitur (Re-Pair stands in for Stage 2 today) | `ARCHITECTURE.md` |
 | 📚 **Background** | Conceptual foundations, external research reports, and archived prior-architecture specs | [`docs/`](docs/) ([`concepts/`](docs/concepts/), [`research/`](docs/research/README.md), [`history/`](docs/history/README.md)) |
 

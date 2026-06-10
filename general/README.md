@@ -20,9 +20,9 @@ templates (and the reconstruction check) update live.
 |---|---|---|
 | 1. Tokenize | [`tokenize.js`](tokenize.js) | Lossless segmentation (`punct` / `word` / `char` / `line`). `tokens.join('') === text`. |
 | 2. Grammar | [`grammar.js`](grammar.js) | **Re-Pair** grammar induction, producing a hierarchy of *exact* repeats. (See note below.) |
-| Bridge | [`induce.js`](induce.js) | Turns the grammar into "records" (near-repeated spans) and feeds them to Stage 3 at token granularity. |
+| Bridge | [`bridge.js`](bridge.js) | Turns the grammar into "records" (near-repeated spans) and feeds them to Stage 3 at token granularity. Also hosts the end-to-end `induce()`; [`induce.js`](induce.js) is the CLI shell over it. |
 | 3-4. Merge + Select | [`../core/group-by-template.js`](../core/group-by-template.js) | Bookend Merge + greedy MDL selection (shared engine). |
-| 5. Reconstruct | `induce.js` | Verifies every grouped record round-trips exactly. |
+| 5. Reconstruct | `bridge.js` | Verifies every grouped record round-trips exactly. |
 
 ### Why Re-Pair instead of Sequitur?
 
@@ -39,7 +39,7 @@ than which algorithm in the family provides it.)
 ### The bridge is the open question
 
 Stage 3 compares whole records. Getting from a grammar to "records" is the part
-ARCHITECTURE leaves open, so `induce.js` offers two strategies to compare:
+ARCHITECTURE leaves open, so `bridge.js` offers two strategies to compare:
 
 - **`lines`** splits the token stream on newlines. The record boundary is given, so
   the grammar is used only for diagnosis. This is robust for logs.

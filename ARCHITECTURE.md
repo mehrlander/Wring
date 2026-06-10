@@ -32,7 +32,7 @@ Segment the document into a symbol stream. This defines the alphabet Sequitur op
 
 Pre-typing (normalizing known field types like dates or IPs before grammar induction) is an optional optimization, not a prerequisite. The mechanism must work without it.
 
-**Status**: One concrete segmenter is implemented for the DOM use case. `dom/extract-signatures.js` turns raw HTML into `tag#id.class.class` signatures. A general-text tokenizer (character or punctuation-aware) is still conceptual.
+**Status**: Implemented for both use cases. `dom/extract-signatures.js` turns raw HTML into `tag#id.class.class` signatures; `general/tokenize.js` provides four lossless general-text tokenizers (punctuation-aware, word, character, line), tested in `general/test-grammar.js` and exercised end-to-end by `general/induce.js`.
 
 ---
 

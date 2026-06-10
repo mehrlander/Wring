@@ -193,3 +193,34 @@ for (let i = 0; i < result3.groups.length; i++) {
 
 console.log(`Grouped: ${strings.length - result3.ungrouped.length}/${strings.length}`);
 console.log(`Ungrouped: ${result3.ungrouped.length}`);
+
+// ─── Regression: "$" replacement patterns in slot values ────────────────────
+// String.prototype.replace treats "$&", "$$", "$'" etc. in a string
+// replacement specially; slot values are data and must round-trip verbatim
+// (Reconstruction Fidelity invariant).
+
+console.log('\n' + '='.repeat(80));
+console.log('  Regression: "$" patterns in slot values');
+console.log('='.repeat(80));
+
+let dollarFails = 0;
+const dollarStrings = ["price.a$&1.usd", "price.b$$2.usd", "price.c$'3.usd"];
+const dollarResult = groupByTemplate(dollarStrings);
+if (dollarResult.groups.length === 0) {
+  dollarFails++;
+  console.log('  FAIL: no group formed for $-containing strings');
+}
+for (const g of dollarResult.groups) {
+  for (const m of g.members) {
+    const rebuilt = reconstruct(g.template, m.slots);
+    if (rebuilt !== m.original) {
+      dollarFails++;
+      console.log(`  FAIL: ${JSON.stringify(rebuilt)} !== ${JSON.stringify(m.original)}`);
+    }
+  }
+}
+if (dollarFails === 0) console.log('\n  ✓ slot values containing "$" round-trip exactly');
+
+const totalFailures = fail + dollarFails;
+console.log(totalFailures === 0 ? '\nALL PASSED' : `\n${totalFailures} FAILURES`);
+process.exit(totalFailures === 0 ? 0 : 1);
