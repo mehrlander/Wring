@@ -29,6 +29,16 @@ is a copy, not a port: each file here lands verbatim at the matching path.
    (concept complete, live code in web-tools, snapshot at `archive/wring/`)
    and flip on GitHub's *Archive repository* setting.
 
+**Done 2026-06-11** through steps 1 to 3, in
+[web-tools PR #172](https://github.com/mehrlander/web-tools/pull/172), at this
+repo's final commit `23114dc`. Step 4 followed on 2026-08-15; the destination
+paths shifted slightly on the way in (the two pages landed under
+`pages/demos/`, and the test was recast onto `node:test` as
+`tools/test/wring.test.mjs`), so read
+[`archive/wring/IMPORT.md`](https://github.com/mehrlander/web-tools/blob/main/archive/wring/IMPORT.md)
+there for what actually shipped where. This file is the plan as written before
+the move, kept as the record of it.
+
 ## Regenerating the kit
 
 ```bash

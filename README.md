@@ -1,5 +1,27 @@
 # Wring
 
+> [!NOTE]
+> **Frozen 2026-08-15 → [mehrlander/web-tools](https://github.com/mehrlander/web-tools):**
+> the concept is complete and the live code moved. This repository is a record of
+> how it was built, kept read-only. Nothing below is wrong; it describes the
+> project as it stood at its final commit, `23114dc`.
+>
+> **Where the working code is now**, imported 2026-06-11 in
+> [web-tools PR #172](https://github.com/mehrlander/web-tools/pull/172):
+>
+> | | |
+> |---|---|
+> | The engine, as a loadable kit | [`lib/kits/wring.js`](https://github.com/mehrlander/web-tools/blob/main/lib/kits/wring.js) |
+> | The two demos, live | [wring-text](https://mehrlander.github.io/web-tools/pages/demos/wring-text.html), [wring-dom](https://mehrlander.github.io/web-tools/pages/demos/wring-dom.html) |
+> | The test, in that repo's suite | [`tools/test/wring.test.mjs`](https://github.com/mehrlander/web-tools/blob/main/tools/test/wring.test.mjs) |
+> | A byte-for-byte snapshot of this repo | [`archive/wring/`](https://github.com/mehrlander/web-tools/tree/main/archive/wring) ([provenance](https://github.com/mehrlander/web-tools/blob/main/archive/wring/IMPORT.md)) |
+>
+> The snapshot is the one to read: it carries these same source modules, the full
+> six-harness suite (`npm test` runs inside it), and the design and research
+> record under `docs/`. Fixes and features happen against the kit there, not here.
+> The lineage of thinking behind the project, which is roughly twice the size of
+> this repository, is bound in `mehrlander/home` at `chron/threads/wring.md`.
+
 Single-document template induction from internal repetition.
 
 Give Wring **one** document that has repeated structure, such as a log or an HTML
@@ -71,7 +93,7 @@ the five-stage pipeline now has a working, tested implementation.** See
 | ✅ **Runnable** | `induceGrammar`: grammar induction via Re-Pair (Stage 2) | [`general/grammar.js`](general/grammar.js) |
 | ✅ **Runnable** | `groupByTemplate` (literal bookends) and `groupByAlignment` (positional): Stage 3 | [`core/`](core/README.md), [`general/`](general/README.md) |
 | ✅ **Runnable** | `selectTemplates`: MDL plus exact weighted interval scheduling (Stage 4) | [`selection/`](selection/README.md) |
-| 📦 **Handoff** | The engine packaged as a web-tools *kit* plus ported demo pages, ready to copy into [`mehrlander/web-tools`](https://github.com/mehrlander/web-tools) (see the move manifest) | [`export/`](export/README.md) |
+| 📦 **Handoff** | The engine packaged as a web-tools *kit* plus ported demo pages. **Done:** copied into [`mehrlander/web-tools`](https://github.com/mehrlander/web-tools) on 2026-06-11; this is the record of what was copied out | [`export/`](export/README.md) |
 | 📝 **Spec only** | Online Sequitur (Re-Pair stands in for Stage 2 today) | `ARCHITECTURE.md` |
 | 📚 **Background** | Conceptual foundations, external research reports, and archived prior-architecture specs | [`docs/`](docs/) ([`concepts/`](docs/concepts/), [`research/`](docs/research/README.md), [`history/`](docs/history/README.md)) |
 
